@@ -84,3 +84,46 @@ await client.close();
 3. Send password → receive token
 4. Use token for subsequent authenticated requests
 5. Auto-refresh token on expiration (error code -666003)
+
+## Available API Methods
+
+### Discovery Methods
+- `listHubs()` - Get hub information and status
+- `listAccessories(expand)` - Get all devices with services/characteristics
+- `listRooms()` - Get room information
+- `getFullSystemInfo()` - Get complete system state
+
+### Control Methods  
+- `execute(command, params)` - Execute device commands
+- `setClientInfo(info)` - Set WebSocket client information
+- `version()` - Get server version information
+
+### Helper Methods
+- `getDevicesByRoom(accessories, roomId)` - Filter devices by room
+- `getControllableCharacteristics(accessories)` - Extract controllable devices
+- `getDeviceInfo(accessories, accessoryId)` - Get device details
+- `getCharacteristicInfo(accessories, aId, sId, cId)` - Get characteristic details
+
+### Value Types Supported
+- `boolean` - For switches, sensors (true/false)
+- `integer` - For numeric controls (brightness, temperature)
+- `float` - For decimal values
+- `string` - For text-based controls
+
+## MCP Server Integration
+This library is designed to work seamlessly with MCP (Model Context Protocol) servers:
+
+1. **Device Discovery**: Use `getFullSystemInfo()` to get all controllable devices
+2. **Device Control**: Use `execute()` with proper value types for device control
+3. **State Reading**: Access current device states from the discovery data
+4. **Room Organization**: Filter and organize devices by rooms for better UX
+
+## Recent Enhancements (2025-01-20)
+✅ Added comprehensive device discovery methods
+✅ Enhanced execute method with multiple value type support
+✅ Added helper methods for device filtering and metadata parsing
+✅ Implemented system information aggregation
+✅ Added client information management
+✅ Comprehensive JSDoc documentation
+✅ Full test coverage for new functionality
+✅ Ready for MCP server and HTTP bridge integration

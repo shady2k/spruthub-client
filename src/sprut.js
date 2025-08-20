@@ -275,6 +275,18 @@ class Sprut {
     });
   }
 
+  /**
+   * Execute a command on a specific device characteristic
+   * @param {string} command - Command to execute (currently supports "update")
+   * @param {Object} params - Command parameters
+   * @param {number} params.accessoryId - Device accessory ID
+   * @param {number} params.serviceId - Service ID within the accessory
+   * @param {number} params.characteristicId - Characteristic ID within the service
+   * @param {Object} params.control - Control object
+   * @param {*} params.control.value - Value to set (boolean, number, or string)
+   * @param {string} [params.control.valueType] - Explicit value type ('bool', 'int', 'float', 'string')
+   * @returns {Promise<Object>} Response indicating success or failure
+   */
   async execute(command, { accessoryId, serviceId, characteristicId, control }) {
     // Check if the command is allowed
     const commands = ["update"];
@@ -287,16 +299,40 @@ class Sprut {
       throw new Error("accessoryId, serviceId, characteristicId must be set");
     }
 
-    if (!control && control.value !== true && control.value !== false) {
+    if (!control || control.value === undefined) {
       throw new Error("control.value must be set");
     }
     
     const value = control.value;
+    const valueType = control.valueType || this._determineValueType(value);
 
     await this.ensureConnectionAndAuthentication();
 
     // Execute the command
     try {
+      const controlValue = {};
+      
+      // Set the appropriate value type based on input
+      switch (valueType) {
+        case 'bool':
+        case 'boolean':
+          controlValue.boolValue = Boolean(value);
+          break;
+        case 'int':
+        case 'integer':
+        case 'number':
+          controlValue.intValue = parseInt(value, 10);
+          break;
+        case 'float':
+        case 'double':
+          controlValue.floatValue = parseFloat(value);
+          break;
+        case 'string':
+        default:
+          controlValue.stringValue = String(value);
+          break;
+      }
+
       const updateResult = await this.call({
         characteristic: {
           update: {
@@ -304,9 +340,7 @@ class Sprut {
             sId: serviceId,
             cId: characteristicId,
             control: {
-              value: {
-                boolValue: value
-              }
+              value: controlValue
             }
           }
         }
@@ -333,6 +367,312 @@ class Sprut {
     } catch (error) {
       this.log.error("Error executing command:", error);
       throw error; // Rethrow the error to be caught by the caller
+    }
+  }
+
+  _determineValueType(value) {
+    if (typeof value === 'boolean') {
+      return 'bool';
+    }
+    if (typeof value === 'number') {
+      return Number.isInteger(value) ? 'int' : 'float';
+    }
+    return 'string';
+  }
+
+  /**
+   * Filter accessories by room ID
+   * @param {Array<Object>} accessories - Array of accessory objects
+   * @param {number} roomId - Room ID to filter by
+   * @returns {Array<Object>} Filtered accessories in the specified room
+   */
+  getDevicesByRoom(accessories, roomId) {
+    if (!Array.isArray(accessories)) {
+      return [];
+    }
+    return accessories.filter(accessory => accessory.roomId === roomId);
+  }
+
+  /**
+   * Extract all writable characteristics from accessories for control purposes
+   * @param {Array<Object>} accessories - Array of accessory objects with services and characteristics
+   * @returns {Array<Object>} Array of controllable characteristics with metadata
+   */
+  getControllableCharacteristics(accessories) {
+    const controllable = [];
+    
+    if (!Array.isArray(accessories)) {
+      return controllable;
+    }
+
+    accessories.forEach(accessory => {
+      if (!accessory.services || !Array.isArray(accessory.services)) {
+        return;
+      }
+
+      accessory.services.forEach(service => {
+        if (!service.characteristics || !Array.isArray(service.characteristics)) {
+          return;
+        }
+
+        service.characteristics.forEach(characteristic => {
+          if (characteristic.control && characteristic.control.write) {
+            controllable.push({
+              accessoryId: accessory.id,
+              accessoryName: accessory.name,
+              serviceId: service.sId,
+              serviceName: service.name,
+              serviceType: service.type,
+              characteristicId: characteristic.cId,
+              characteristicName: characteristic.control.name,
+              characteristicType: characteristic.control.type,
+              currentValue: characteristic.control.value,
+              writable: characteristic.control.write,
+              readable: characteristic.control.read,
+              hasEvents: characteristic.control.events,
+              validValues: characteristic.control.validValues || null,
+              minValue: characteristic.control.minValue || null,
+              maxValue: characteristic.control.maxValue || null,
+              minStep: characteristic.control.minStep || null
+            });
+          }
+        });
+      });
+    });
+
+    return controllable;
+  }
+
+  /**
+   * Get detailed information for a specific device
+   * @param {Array<Object>} accessories - Array of accessory objects
+   * @param {number} accessoryId - Device accessory ID
+   * @returns {Object|null} Device information object or null if not found
+   */
+  getDeviceInfo(accessories, accessoryId) {
+    if (!Array.isArray(accessories)) {
+      return null;
+    }
+    
+    return accessories.find(accessory => accessory.id === accessoryId) || null;
+  }
+
+  /**
+   * Get comprehensive information about a specific characteristic
+   * @param {Array<Object>} accessories - Array of accessory objects
+   * @param {number} accessoryId - Device accessory ID
+   * @param {number} serviceId - Service ID
+   * @param {number} characteristicId - Characteristic ID
+   * @returns {Object|null} Detailed characteristic info with device and service context
+   */
+  getCharacteristicInfo(accessories, accessoryId, serviceId, characteristicId) {
+    const device = this.getDeviceInfo(accessories, accessoryId);
+    if (!device || !device.services) {
+      return null;
+    }
+
+    const service = device.services.find(s => s.sId === serviceId);
+    if (!service || !service.characteristics) {
+      return null;
+    }
+
+    const characteristic = service.characteristics.find(c => c.cId === characteristicId);
+    if (!characteristic) {
+      return null;
+    }
+
+    return {
+      device: {
+        id: device.id,
+        name: device.name,
+        manufacturer: device.manufacturer,
+        model: device.model,
+        online: device.online,
+        roomId: device.roomId
+      },
+      service: {
+        id: service.sId,
+        name: service.name,
+        type: service.type
+      },
+      characteristic: {
+        id: characteristic.cId,
+        name: characteristic.control?.name || 'Unknown',
+        type: characteristic.control?.type || 'Unknown',
+        value: characteristic.control?.value || null,
+        writable: characteristic.control?.write || false,
+        readable: characteristic.control?.read || false,
+        validValues: characteristic.control?.validValues || null
+      }
+    };
+  }
+
+  /**
+   * Set client information for the WebSocket connection
+   * @param {Object} clientInfo - Client information object
+   * @param {string} clientInfo.id - Client UUID (auto-generated if not provided)
+   * @param {string} clientInfo.name - Client name
+   * @param {string} clientInfo.type - Client type (e.g., CLIENT_DESKTOP)
+   * @param {string} clientInfo.auth - Authentication string
+   * @returns {Promise<Object>} Response object with success status
+   */
+  async setClientInfo(clientInfo = {}) {
+    await this.ensureConnectionAndAuthentication();
+
+    const defaultClientInfo = {
+      id: require('crypto').randomUUID(),
+      name: "SprutHub Node.js Client",
+      type: "CLIENT_DESKTOP",
+      auth: ""
+    };
+
+    const finalClientInfo = { ...defaultClientInfo, ...clientInfo };
+
+    try {
+      const clientResult = await this.call({
+        server: {
+          clientInfo: finalClientInfo
+        }
+      });
+
+      this.log.info(clientResult, "Client info set successfully");
+
+      if (clientResult.error) {
+        return {
+          isSuccess: false,
+          ...clientResult.error,
+        };
+      }
+
+      return {
+        isSuccess: true,
+        code: 0,
+        message: "Success",
+        data: clientResult.result
+      };
+    } catch (error) {
+      this.log.error("Error setting client info:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get list of all Sprut hubs in the system
+   * @returns {Promise<Object>} Response with hub information including versions, platform details, and status
+   */
+  async listHubs() {
+    await this.ensureConnectionAndAuthentication();
+
+    try {
+      const hubResult = await this.call({
+        hub: {
+          list: {}
+        }
+      });
+
+      this.log.info(hubResult, "Hub list retrieved successfully");
+
+      if (hubResult.error) {
+        return {
+          isSuccess: false,
+          ...hubResult.error,
+        };
+      }
+
+      if (hubResult.result) {
+        return {
+          isSuccess: true,
+          code: 0,
+          message: "Success",
+          data: hubResult.result.hub.list.hubs,
+        };
+      }
+
+      return hubResult;
+    } catch (error) {
+      this.log.error("Error getting hub list:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get list of all accessories (smart home devices) with their services and characteristics
+   * @param {string} expand - Comma-separated list of properties to expand (default: "services,characteristics")
+   * @returns {Promise<Object>} Response with detailed device information including controllable characteristics
+   */
+  async listAccessories(expand = "services,characteristics") {
+    await this.ensureConnectionAndAuthentication();
+
+    try {
+      const accessoryResult = await this.call({
+        accessory: {
+          list: {
+            expand: expand
+          }
+        }
+      });
+
+      this.log.info(accessoryResult, "Accessory list retrieved successfully");
+
+      if (accessoryResult.error) {
+        return {
+          isSuccess: false,
+          ...accessoryResult.error,
+        };
+      }
+
+      if (accessoryResult.result) {
+        return {
+          isSuccess: true,
+          code: 0,
+          message: "Success",
+          data: accessoryResult.result.accessory.list.accessories,
+        };
+      }
+
+      return accessoryResult;
+    } catch (error) {
+      this.log.error("Error getting accessory list:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get list of all rooms in the smart home system
+   * @returns {Promise<Object>} Response with room information including IDs, names, and visibility
+   */
+  async listRooms() {
+    await this.ensureConnectionAndAuthentication();
+
+    try {
+      const roomResult = await this.call({
+        room: {
+          list: {}
+        }
+      });
+
+      this.log.info(roomResult, "Room list retrieved successfully");
+
+      if (roomResult.error) {
+        return {
+          isSuccess: false,
+          ...roomResult.error,
+        };
+      }
+
+      if (roomResult.result) {
+        return {
+          isSuccess: true,
+          code: 0,
+          message: "Success",
+          data: roomResult.result.room.list.rooms,
+        };
+      }
+
+      return roomResult;
+    } catch (error) {
+      this.log.error("Error getting room list:", error);
+      throw error;
     }
   }
 
@@ -370,6 +710,42 @@ class Sprut {
       this.log.error("Error executing command:", error);
       throw error; // Rethrow the error to be caught by the caller
     }
+  }
+
+  /**
+   * Get comprehensive system information including hubs, devices, rooms, and controllable characteristics
+   * Performs parallel API calls for optimal performance
+   * @returns {Promise<Object>} Complete system state with hubs, accessories, rooms, controllable devices, and any errors
+   */
+  async getFullSystemInfo() {
+    const results = await Promise.allSettled([
+      this.listHubs(),
+      this.listAccessories(),
+      this.listRooms()
+    ]);
+
+    const systemInfo = {
+      hubs: results[0].status === 'fulfilled' && results[0].value.isSuccess ? results[0].value.data : [],
+      accessories: results[1].status === 'fulfilled' && results[1].value.isSuccess ? results[1].value.data : [],
+      rooms: results[2].status === 'fulfilled' && results[2].value.isSuccess ? results[2].value.data : [],
+      controllableDevices: [],
+      errors: []
+    };
+
+    // Add any errors that occurred
+    results.forEach((result, index) => {
+      if (result.status === 'rejected') {
+        const apiName = ['hubs', 'accessories', 'rooms'][index];
+        systemInfo.errors.push(`Failed to fetch ${apiName}: ${result.reason.message}`);
+      }
+    });
+
+    // Generate controllable devices list
+    if (systemInfo.accessories.length > 0) {
+      systemInfo.controllableDevices = this.getControllableCharacteristics(systemInfo.accessories);
+    }
+
+    return systemInfo;
   }
 }
 

@@ -103,6 +103,106 @@ const responseRules = [
       },
     }),
   },
+  {
+    match: (message) => message.params?.hub?.list,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        hub: {
+          list: {
+            hubs: [
+              {
+                lastSeen: 1755674957451,
+                online: true,
+                serial: "4A89CC2539C6A7A5",
+                name: "Test Hub",
+                manufacturer: "Sprut.hub",
+                model: "2"
+              }
+            ]
+          }
+        }
+      }
+    })
+  },
+  {
+    match: (message) => message.params?.accessory?.list,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        accessory: {
+          list: {
+            accessories: [
+              {
+                id: 1,
+                name: "Test Device",
+                roomId: 1,
+                online: true,
+                manufacturer: "Test",
+                model: "Test Model",
+                services: [
+                  {
+                    sId: 1,
+                    name: "Test Service",
+                    type: "Switch",
+                    characteristics: [
+                      {
+                        cId: 1,
+                        control: {
+                          name: "On/Off",
+                          type: "On",
+                          write: true,
+                          read: true,
+                          value: { boolValue: false }
+                        }
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    })
+  },
+  {
+    match: (message) => message.params?.room?.list,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        room: {
+          list: {
+            rooms: [
+              {
+                id: 1,
+                name: "Living Room",
+                visible: true,
+                order: 1
+              },
+              {
+                id: 2,
+                name: "Kitchen",
+                visible: true,
+                order: 2
+              }
+            ]
+          }
+        }
+      }
+    })
+  },
+  {
+    match: (message) => message.params?.server?.clientInfo,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        server: {
+          clientInfo: {}
+        }
+      }
+    })
+  }
 ];
 
 describe("Sprut WebSocket Client", () => {
@@ -262,5 +362,140 @@ describe("Sprut WebSocket Client", () => {
         wsUrl: "ws://localhost:1236",
       });
     }).toThrow("wsUrl, sprutEmail, sprutPassword, serial must be set as env variables");
+  });
+
+  test("list hubs command", async () => {
+    const result = await sprut.listHubs();
+
+    expect(result).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Success"
+    });
+    expect(Array.isArray(result.data)).toBe(true);
+  });
+
+  test("list accessories command", async () => {
+    const result = await sprut.listAccessories();
+
+    expect(result).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Success"
+    });
+    expect(Array.isArray(result.data)).toBe(true);
+  });
+
+  test("list rooms command", async () => {
+    const result = await sprut.listRooms();
+
+    expect(result).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Success"
+    });
+    expect(Array.isArray(result.data)).toBe(true);
+  });
+
+  test("execute with different value types", async () => {
+    // Test boolean value
+    const boolResult = await sprut.execute("update", {
+      accessoryId: 167,
+      serviceId: 13,
+      characteristicId: 15,
+      control: { value: true, valueType: 'bool' }
+    });
+    expect(boolResult.isSuccess).toBe(true);
+
+    // Test integer value
+    const intResult = await sprut.execute("update", {
+      accessoryId: 167,
+      serviceId: 13,
+      characteristicId: 15,
+      control: { value: 50, valueType: 'int' }
+    });
+    expect(intResult.isSuccess).toBe(true);
+
+    // Test string value
+    const stringResult = await sprut.execute("update", {
+      accessoryId: 167,
+      serviceId: 13,
+      characteristicId: 15,
+      control: { value: "test string", valueType: 'string' }
+    });
+    expect(stringResult.isSuccess).toBe(true);
+  });
+
+  test("helper methods for device information", async () => {
+    const mockAccessories = [
+      {
+        id: 1,
+        name: "Device 1",
+        roomId: 1,
+        services: [
+          {
+            sId: 1,
+            name: "Service 1",
+            type: "Switch",
+            characteristics: [
+              {
+                cId: 1,
+                control: {
+                  name: "On/Off",
+                  type: "On",
+                  write: true,
+                  read: true,
+                  value: { boolValue: false }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ];
+
+    // Test getDevicesByRoom
+    const roomDevices = sprut.getDevicesByRoom(mockAccessories, 1);
+    expect(roomDevices).toHaveLength(1);
+    expect(roomDevices[0].id).toBe(1);
+
+    // Test getControllableCharacteristics
+    const controllable = sprut.getControllableCharacteristics(mockAccessories);
+    expect(controllable).toHaveLength(1);
+    expect(controllable[0]).toMatchObject({
+      accessoryId: 1,
+      serviceId: 1,
+      characteristicId: 1,
+      writable: true
+    });
+
+    // Test getDeviceInfo
+    const deviceInfo = sprut.getDeviceInfo(mockAccessories, 1);
+    expect(deviceInfo).not.toBeNull();
+    expect(deviceInfo.id).toBe(1);
+    expect(deviceInfo.name).toBe("Device 1");
+
+    // Test getCharacteristicInfo
+    const charInfo = sprut.getCharacteristicInfo(mockAccessories, 1, 1, 1);
+    expect(charInfo).not.toBeNull();
+    expect(charInfo.device.id).toBe(1);
+    expect(charInfo.service.id).toBe(1);
+    expect(charInfo.characteristic.id).toBe(1);
+  });
+
+  test("full system info retrieval", async () => {
+    const systemInfo = await sprut.getFullSystemInfo();
+    
+    expect(systemInfo).toHaveProperty('hubs');
+    expect(systemInfo).toHaveProperty('accessories');
+    expect(systemInfo).toHaveProperty('rooms');
+    expect(systemInfo).toHaveProperty('controllableDevices');
+    expect(systemInfo).toHaveProperty('errors');
+    
+    expect(Array.isArray(systemInfo.hubs)).toBe(true);
+    expect(Array.isArray(systemInfo.accessories)).toBe(true);
+    expect(Array.isArray(systemInfo.rooms)).toBe(true);
+    expect(Array.isArray(systemInfo.controllableDevices)).toBe(true);
+    expect(Array.isArray(systemInfo.errors)).toBe(true);
   });
 });
