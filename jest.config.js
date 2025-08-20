@@ -9,7 +9,7 @@ module.exports = {
     "!src/**/*.spec.js"
   ],
   testMatch: [
-    "**/src/**/*.test.js"
+    "**/tests/**/*.test.js"
   ],
   verbose: true
 };

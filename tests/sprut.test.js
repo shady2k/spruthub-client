@@ -1,5 +1,5 @@
 const { WebSocketServer } = require("ws");
-const { Sprut } = require("./index");
+const { Sprut } = require("../src/index");
 
 const responseRules = [
   {

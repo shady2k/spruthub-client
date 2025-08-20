@@ -1,4 +1,4 @@
-const { Queue } = require("./index");
+const { Queue } = require("../src/index");
 
 describe("Queue", () => {
   let queue;
