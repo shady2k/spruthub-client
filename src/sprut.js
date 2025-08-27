@@ -580,12 +580,17 @@ class Sprut {
       }
 
       if (hubResult.result) {
-        return {
-          isSuccess: true,
-          code: 0,
-          message: "Success",
-          data: hubResult.result.hub.list.hubs,
-        };
+        // Handle both formats: direct result or nested hub.list result
+        if (hubResult.result.hub && hubResult.result.hub.list && hubResult.result.hub.list.hubs) {
+          return {
+            isSuccess: true,
+            code: 0,
+            message: "Success",
+            data: hubResult.result.hub.list.hubs,
+          };
+        } else {
+          return hubResult.result;
+        }
       }
 
       return hubResult;
@@ -622,12 +627,17 @@ class Sprut {
       }
 
       if (accessoryResult.result) {
-        return {
-          isSuccess: true,
-          code: 0,
-          message: "Success",
-          data: accessoryResult.result.accessory.list.accessories,
-        };
+        // Handle both formats: direct result or nested accessory.list result
+        if (accessoryResult.result.accessory && accessoryResult.result.accessory.list && accessoryResult.result.accessory.list.accessories) {
+          return {
+            isSuccess: true,
+            code: 0,
+            message: "Success",
+            data: accessoryResult.result.accessory.list.accessories,
+          };
+        } else {
+          return accessoryResult.result;
+        }
       }
 
       return accessoryResult;
@@ -661,12 +671,17 @@ class Sprut {
       }
 
       if (roomResult.result) {
-        return {
-          isSuccess: true,
-          code: 0,
-          message: "Success",
-          data: roomResult.result.room.list.rooms,
-        };
+        // Handle both formats: direct result or nested room.list result  
+        if (roomResult.result.room && roomResult.result.room.list && roomResult.result.room.list.rooms) {
+          return {
+            isSuccess: true,
+            code: 0,
+            message: "Success",
+            data: roomResult.result.room.list.rooms,
+          };
+        } else {
+          return roomResult.result;
+        }
       }
 
       return roomResult;
@@ -697,12 +712,17 @@ class Sprut {
       }
 
       if (versionResult.result) {
-        return {
-          isSuccess: true,
-          code: 0,
-          message: "Success",
-          data: versionResult.result.server.version,
-        };
+        // Handle both formats: direct result or nested server.version result
+        if (versionResult.result.server && versionResult.result.server.version) {
+          return {
+            isSuccess: true,
+            code: 0,
+            message: "Success",
+            data: versionResult.result.server.version,
+          };
+        } else {
+          return versionResult.result;
+        }
       }
 
       return versionResult;
