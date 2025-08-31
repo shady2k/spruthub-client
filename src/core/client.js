@@ -94,7 +94,7 @@ class Sprut {
     // Additional disconnection logic can be added here
   }
 
-  handleError(error) {
+  handleError(_error) {
     // Additional error handling can be added here
   }
 
