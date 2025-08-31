@@ -98,8 +98,16 @@ class WebSocketManager {
     return new Promise((resolve, reject) => {
       this.isTerminated = true;
       if (this.wsClient) {
+        // Add a timeout to prevent hanging
+        const timeout = setTimeout(() => {
+          this.wsClient.removeAllListeners("close");
+          this.log.info("WebSocket close timeout, forcing termination");
+          resolve();
+        }, 5000); // 5 second timeout
+
         // Listen for the 'close' event
         this.wsClient.once("close", () => {
+          clearTimeout(timeout);
           // Once the 'close' event is emitted, resolve the promise
           resolve();
         });
@@ -108,6 +116,7 @@ class WebSocketManager {
         try {
           this.wsClient.close();
         } catch (error) {
+          clearTimeout(timeout);
           // If there is an error while closing, remove the 'close' event listener
           // to prevent future resolutions and reject the promise
           this.wsClient.removeListener("close", resolve);

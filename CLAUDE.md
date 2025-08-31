@@ -84,21 +84,315 @@ Utility functions:
 - `npm run lint:fix`: Fix ESLint issues
 
 ## API Usage
+
+### Basic Setup
 ```javascript
 const { Sprut } = require('spruthub-client');
 
+// Create client instance
 const client = new Sprut({
-  wsUrl: 'wss://server.com',
-  sprutEmail: 'email@example.com',
-  sprutPassword: 'password',
-  serial: 'device-serial',
-  logger: logger
+  wsUrl: 'wss://your-sprut-server.com',
+  sprutEmail: 'your-email@example.com',
+  sprutPassword: 'your-password',
+  serial: 'your-device-serial',
+  logger: console // or your preferred logger
 });
 
+// Connect and authenticate
 await client.connected();
-await client.execute('update', { accessoryId, serviceId, characteristicId, control });
-await client.version();
+
+// Your code here...
+
+// Clean up
 await client.close();
+```
+
+### Complete Usage Examples
+
+#### 1. Device Discovery and Control
+```javascript
+const { Sprut } = require('spruthub-client');
+
+async function controlDevices() {
+  const client = new Sprut({
+    wsUrl: 'wss://your-server.com',
+    sprutEmail: 'email@example.com',
+    sprutPassword: 'password',
+    serial: 'device-serial',
+    logger: console
+  });
+
+  try {
+    // Connect and authenticate
+    await client.connected();
+    
+    // Get all system information
+    const systemInfo = await client.getFullSystemInfo();
+    console.log('Hubs:', systemInfo.hubs);
+    console.log('Devices:', systemInfo.accessories);
+    console.log('Rooms:', systemInfo.rooms);
+    console.log('Scenarios:', systemInfo.scenarios);
+    
+    // Get only devices with expanded details
+    const devices = await client.listAccessories(true);
+    
+    // Find controllable characteristics
+    const controllable = client.getControllableCharacteristics(devices);
+    console.log('Controllable devices:', controllable);
+    
+    // Control a specific device (example: turn on a light)
+    if (controllable.length > 0) {
+      const device = controllable[0];
+      await client.execute('update', {
+        accessoryId: device.accessoryId,
+        serviceId: device.serviceId,
+        characteristicId: device.characteristicId,
+        control: { value: true } // Turn on
+      });
+    }
+    
+  } finally {
+    await client.close();
+  }
+}
+
+controlDevices().catch(console.error);
+```
+
+#### 2. Room-based Device Management
+```javascript
+async function manageRoomDevices() {
+  const client = new Sprut({...config});
+  
+  await client.connected();
+  
+  // Get all rooms and devices
+  const rooms = await client.listRooms();
+  const devices = await client.listAccessories(true);
+  
+  // Filter devices by room
+  const livingRoomId = rooms.find(r => r.name === 'Living Room')?.id;
+  if (livingRoomId) {
+    const livingRoomDevices = client.getDevicesByRoom(devices, livingRoomId);
+    console.log('Living room devices:', livingRoomDevices);
+    
+    // Turn off all lights in living room
+    for (const device of livingRoomDevices) {
+      if (device.type === 'light') {
+        await client.execute('update', {
+          accessoryId: device.id,
+          serviceId: device.services[0].id,
+          characteristicId: device.services[0].characteristics[0].id,
+          control: { value: false }
+        });
+      }
+    }
+  }
+  
+  await client.close();
+}
+```
+
+#### 3. Scenario Management
+```javascript
+async function manageScenarios() {
+  const client = new Sprut({...config});
+  
+  await client.connected();
+  
+  // List all scenarios
+  const scenarios = await client.listScenarios();
+  console.log('Available scenarios:', scenarios);
+  
+  // Create a new scenario
+  const newScenario = await client.createScenario({
+    type: "BLOCK",
+    name: "Evening Routine",
+    desc: "Turn off lights and activate security",
+    onStart: false,
+    active: true,
+    sync: false,
+    data: ""
+  });
+  
+  // Update scenario with logic
+  const scenarioData = JSON.stringify({
+    blockId: 0,
+    targets: [{
+      type: "code",
+      code: `
+        // Turn off all lights
+        const devices = await client.listAccessories(true);
+        const lights = devices.filter(d => d.type === 'light');
+        for (const light of lights) {
+          await client.execute('update', {
+            accessoryId: light.id,
+            serviceId: light.services[0].id,
+            characteristicId: light.services[0].characteristics[0].id,
+            control: { value: false }
+          });
+        }
+        log.info('Evening routine completed');
+      `
+    }]
+  });
+  
+  await client.updateScenario(newScenario.data.index, scenarioData);
+  
+  await client.close();
+}
+```
+
+#### 4. Real-time Device Monitoring
+```javascript
+async function monitorDevices() {
+  const client = new Sprut({...config});
+  
+  // Set up connection event handlers
+  client.wsManager.setEventHandlers({
+    onOpen: () => console.log('Connected to Sprut hub'),
+    onMessage: (data) => {
+      console.log('Received update:', data);
+      // Handle real-time device updates
+    },
+    onClose: () => console.log('Disconnected from hub'),
+    onError: (error) => console.error('Connection error:', error)
+  });
+  
+  await client.connected();
+  
+  // Keep connection alive for monitoring
+  setInterval(async () => {
+    try {
+      const version = await client.version();
+      console.log('Server version:', version);
+    } catch (error) {
+      console.error('Health check failed:', error);
+    }
+  }, 30000);
+}
+```
+
+### Error Handling Best Practices
+```javascript
+async function robustClientUsage() {
+  const client = new Sprut({...config});
+  
+  try {
+    await client.connected();
+    
+    // Your operations here
+    const devices = await client.listAccessories(true);
+    
+  } catch (error) {
+    if (error.code === -666003) {
+      // Token expired, client will auto-refresh
+      console.log('Token refreshed, retrying...');
+      // Retry your operation
+    } else {
+      console.error('Operation failed:', error);
+    }
+  } finally {
+    // Always clean up
+    try {
+      await client.close();
+    } catch (closeError) {
+      console.error('Error during cleanup:', closeError);
+    }
+  }
+}
+```
+
+## Complete API Reference
+
+### Connection Methods
+- `connected()` - Connect and authenticate to the Sprut hub
+- `close()` - Close connection and cleanup resources
+- `version()` - Get server version information
+
+### Discovery Methods
+- `listHubs()` - Get hub information and status
+- `listAccessories(expand = false)` - Get all devices, optionally with detailed services/characteristics
+- `listRooms()` - Get room information and device associations
+- `listScenarios()` - Get all automation scenarios
+- `getFullSystemInfo()` - Get complete system state (hubs, devices, rooms, scenarios)
+
+### Device Control Methods
+- `execute(command, params)` - Execute device commands
+  - `command`: Currently supports 'update'
+  - `params`: `{ accessoryId, serviceId, characteristicId, control }`
+  - `control`: `{ value }` where value type depends on characteristic
+
+### Scenario Management Methods
+- `createScenario(config)` - Create new automation scenario
+  - `config`: `{ type, name, desc, onStart, active, sync, data }`
+- `updateScenario(index, data)` - Update existing scenario configuration
+  - `index`: Scenario identifier
+  - `data`: JSON string with scenario logic
+
+### System Methods
+- `setClientInfo(info)` - Set WebSocket client information for identification
+
+### Helper Methods (Static/Instance)
+- `getDevicesByRoom(accessories, roomId)` - Filter devices by specific room
+- `getControllableCharacteristics(accessories)` - Extract devices with controllable characteristics
+- `getDeviceInfo(accessories, accessoryId)` - Get detailed device information
+- `getCharacteristicInfo(accessories, aId, sId, cId)` - Get specific characteristic details
+
+### Method Return Types
+
+#### `listHubs()` Returns:
+```javascript
+[{
+  id: "hub-id",
+  name: "Hub Name",
+  status: "online",
+  version: "1.0.0"
+}]
+```
+
+#### `listAccessories(true)` Returns:
+```javascript
+[{
+  id: "device-id",
+  name: "Device Name",
+  roomId: "room-id",
+  services: [{
+    id: "service-id",
+    type: "lightbulb",
+    characteristics: [{
+      id: "char-id",
+      type: "on",
+      format: "boolean",
+      perms: ["read", "write"],
+      value: true
+    }]
+  }]
+}]
+```
+
+#### `listRooms()` Returns:
+```javascript
+[{
+  id: "room-id",
+  name: "Living Room",
+  devices: ["device-id-1", "device-id-2"]
+}]
+```
+
+#### `listScenarios()` Returns:
+```javascript
+[{
+  index: "scenario-id",
+  name: "Evening Routine",
+  desc: "Turn off lights",
+  type: "BLOCK",
+  active: true,
+  onStart: false,
+  sync: false,
+  order: 1,
+  data: "{...json...}"
+}]
 ```
 
 ## Testing

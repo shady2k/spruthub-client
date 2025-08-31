@@ -112,12 +112,36 @@ const responseRules = [
           list: {
             hubs: [
               {
-                lastSeen: 1755674957451,
+                lastSeen: 1756647767291,
                 online: true,
+                discovery: false,
+                version: {
+                  current: {
+                    revision: 14788,
+                    template: 6339,
+                    version: "1.12.3",
+                    hardware: "20250622_1708_spruthub2"
+                  },
+                  upgrade: {
+                    revision: 14910,
+                    template: 6593,
+                    version: "1.12.6"
+                  },
+                  branch: "release"
+                },
+                platform: {
+                  manufacturer: "IMAQLIQ",
+                  model: "gbox-x3",
+                  serial: "3IJ4601ED86",
+                  mac: "AA09BB01CD86",
+                  jdk: "17.0.14 (Zulu17.56+15-CA)"
+                },
                 serial: "4A89CC2539C6A7A5",
                 name: "Test Hub",
                 manufacturer: "Sprut.hub",
-                model: "2"
+                model: "2",
+                owner: "test@example.com",
+                lang: "EN"
               }
             ]
           }
@@ -204,44 +228,6 @@ const responseRules = [
     })
   },
   {
-    match: (message) => message.params?.scenario?.list,
-    response: (message) => ({
-      id: message.id,
-      result: {
-        scenario: {
-          list: {
-            scenarios: [
-              {
-                order: 1,
-                type: "BLOCK",
-                predefined: false,
-                active: true,
-                onStart: false,
-                sync: false,
-                error: false,
-                index: "1",
-                name: "Test Scenario",
-                desc: "A test scenario for automation"
-              },
-              {
-                order: 2,
-                type: "BLOCK",
-                predefined: false,
-                active: false,
-                onStart: true,
-                sync: false,
-                error: false,
-                index: "2",
-                name: "Morning Routine",
-                desc: "Morning automation routine"
-              }
-            ]
-          }
-        }
-      }
-    })
-  },
-  {
     match: (message) => message.params?.scenario?.create,
     response: (message) => ({
       id: message.id,
@@ -281,6 +267,240 @@ const responseRules = [
             name: "Updated Scenario",
             desc: "Updated scenario description",
             iconsThen: ["code"]
+          }
+        }
+      }
+    })
+  },
+  {
+    match: (message) => message.params?.service?.types,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        service: {
+          types: {
+            types: [
+              {
+                system: true,
+                id: "",
+                shortId: "",
+                type: "GenericService",
+                name: "Unknown Service",
+                optional: [
+                  {
+                    read: true,
+                    write: true,
+                    events: true,
+                    hidden: false,
+                    id: "",
+                    shortId: "",
+                    type: "GenericBoolean",
+                    name: "Boolean Value",
+                    format: "Boolean"
+                  },
+                  {
+                    read: true,
+                    write: true,
+                    events: true,
+                    hidden: false,
+                    id: "",
+                    shortId: "",
+                    type: "GenericInteger",
+                    name: "Integer Value",
+                    format: "Integer"
+                  },
+                  {
+                    read: true,
+                    write: true,
+                    events: true,
+                    hidden: false,
+                    id: "",
+                    shortId: "",
+                    type: "GenericString",
+                    name: "String Value",
+                    format: "String"
+                  }
+                ]
+              },
+              {
+                system: true,
+                id: "0000003E-0000-1000-8000-0026BB765291",
+                shortId: "3E",
+                type: "AccessoryInformation",
+                name: "Accessory Information",
+                required: [
+                  {
+                    maxLen: 64,
+                    read: true,
+                    write: false,
+                    events: false,
+                    hidden: false,
+                    id: "00000052-0000-1000-8000-0026BB765291",
+                    shortId: "52",
+                    type: "FirmwareRevision",
+                    name: "Firmware Version",
+                    format: "String"
+                  },
+                  {
+                    read: false,
+                    write: true,
+                    events: false,
+                    hidden: false,
+                    id: "00000014-0000-1000-8000-0026BB765291",
+                    shortId: "14",
+                    type: "Identify",
+                    name: "Identify",
+                    format: "Boolean"
+                  },
+                  {
+                    maxLen: 64,
+                    read: true,
+                    write: false,
+                    events: false,
+                    hidden: false,
+                    id: "00000023-0000-1000-8000-0026BB765291",
+                    shortId: "23",
+                    type: "Name",
+                    name: "Name",
+                    format: "String"
+                  }
+                ],
+                optional: [
+                  {
+                    maxLen: 64,
+                    read: true,
+                    write: true,
+                    events: true,
+                    hidden: false,
+                    id: "000000E3-0000-1000-8000-0026BB765291",
+                    shortId: "E3",
+                    type: "ConfiguredName",
+                    name: "ConfiguredName",
+                    format: "String"
+                  }
+                ]
+              },
+              {
+                system: false,
+                id: "000000BB-0000-1000-8000-0026BB765291",
+                shortId: "BB",
+                type: "AirPurifier",
+                name: "Air Purifier",
+                required: [
+                  {
+                    minValue: 0,
+                    maxValue: 1,
+                    minStep: 1,
+                    read: true,
+                    write: true,
+                    events: true,
+                    hidden: false,
+                    id: "000000B0-0000-1000-8000-0026BB765291",
+                    shortId: "B0",
+                    type: "Active",
+                    name: "Active",
+                    format: "Integer",
+                    validValues: [
+                      {
+                        value: { intValue: 0 },
+                        key: "INACTIVE",
+                        name: "No"
+                      },
+                      {
+                        value: { intValue: 1 },
+                        key: "ACTIVE",
+                        name: "Yes"
+                      }
+                    ]
+                  }
+                ],
+                optional: [
+                  {
+                    minValue: 0,
+                    maxValue: 100,
+                    minStep: 1,
+                    read: true,
+                    write: true,
+                    events: true,
+                    hidden: false,
+                    id: "00000029-0000-1000-8000-0026BB765291",
+                    shortId: "29",
+                    type: "RotationSpeed",
+                    name: "Fan Speed (%)",
+                    format: "Double",
+                    unit: "%"
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    })
+  },
+  {
+    match: (message) => message.params?.scenario?.list,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        scenario: {
+          list: {
+            scenarios: [
+              {
+                order: -1,
+                type: "LOGIC", 
+                predefined: true,
+                active: true,
+                onStart: false,
+                sync: false,
+                error: false,
+                index: "SmoothBrightnessChange",
+                name: "Плавное изменение яркости",
+                desc: "Изменяет яркость включаемой лампочки от начального до конечного значения за указанное количество секунд"
+              },
+              {
+                order: 44,
+                type: "LOGIC",
+                predefined: false,
+                active: true,
+                onStart: true,
+                sync: false,
+                error: false,
+                index: "44", 
+                name: "Статистика датчиков",
+                desc: "Сбор метрик датчиков"
+              },
+              {
+                order: 45,
+                type: "BLOCK",
+                predefined: false,
+                active: true,
+                onStart: true,
+                sync: false,
+                error: false,
+                index: "45",
+                name: "Температура",
+                desc: "",
+                rooms: [14],
+                iconsIf: ["TemperatureSensor"],
+                iconsThen: ["code"]
+              },
+              {
+                order: 2,
+                type: "BLOCK",
+                predefined: false,
+                active: true,
+                onStart: true,
+                sync: false,
+                error: false,
+                index: "2",
+                name: "Лента на кухне",
+                desc: "Лента на кухне",
+                rooms: [6, 7],
+                iconsIf: ["MotionSensor", "Lightbulb", "LightSensor"],
+                iconsThen: ["Lightbulb"]
+              }
+            ]
           }
         }
       }
@@ -480,6 +700,83 @@ describe("Sprut WebSocket Client", () => {
     expect(Array.isArray(result.data)).toBe(true);
   });
 
+  test("get service types command", async () => {
+    const result = await sprut.call({
+      service: { types: {} }
+    });
+
+    expect(result).toMatchObject({
+      result: {
+        service: {
+          types: {
+            types: expect.arrayContaining([
+              expect.objectContaining({
+                type: "GenericService",
+                system: true
+              }),
+              expect.objectContaining({
+                type: "AccessoryInformation", 
+                system: true
+              }),
+              expect.objectContaining({
+                type: "AirPurifier",
+                system: false
+              })
+            ])
+          }
+        }
+      }
+    });
+    
+    // Verify we got the expected service types
+    expect(result.result.service.types.types).toHaveLength(3);
+    expect(result.result.service.types.types[0].type).toBe("GenericService");
+    expect(result.result.service.types.types[1].type).toBe("AccessoryInformation");
+    expect(result.result.service.types.types[2].type).toBe("AirPurifier");
+  });
+
+  test("get scenario list command", async () => {
+    const result = await sprut.call({
+      scenario: { list: {} }
+    });
+
+    expect(result).toMatchObject({
+      result: {
+        scenario: {
+          list: {
+            scenarios: expect.arrayContaining([
+              expect.objectContaining({
+                index: "SmoothBrightnessChange",
+                name: "Плавное изменение яркости",
+                type: "LOGIC",
+                predefined: true
+              }),
+              expect.objectContaining({
+                index: "44",
+                name: "Статистика датчиков", 
+                type: "LOGIC",
+                predefined: false
+              }),
+              expect.objectContaining({
+                index: "45",
+                name: "Температура",
+                type: "BLOCK",
+                rooms: [14]
+              })
+            ])
+          }
+        }
+      }
+    });
+    
+    // Verify we got the expected scenarios
+    expect(result.result.scenario.list.scenarios).toHaveLength(4);
+    expect(result.result.scenario.list.scenarios[0].index).toBe("SmoothBrightnessChange");
+    expect(result.result.scenario.list.scenarios[1].index).toBe("44");
+    expect(result.result.scenario.list.scenarios[2].index).toBe("45");
+    expect(result.result.scenario.list.scenarios[3].index).toBe("2");
+  });
+
   test("execute with different value types", async () => {
     // Test boolean value
     const boolResult = await sprut.execute("update", {
@@ -593,12 +890,20 @@ describe("Sprut WebSocket Client", () => {
       message: "Success"
     });
     expect(Array.isArray(result.data)).toBe(true);
-    expect(result.data).toHaveLength(2);
+    expect(result.data).toHaveLength(4);
     expect(result.data[0]).toMatchObject({
-      index: "1",
-      name: "Test Scenario",
-      type: "BLOCK",
-      active: true
+      index: "SmoothBrightnessChange",
+      name: "Плавное изменение яркости",
+      type: "LOGIC",
+      active: true,
+      predefined: true
+    });
+    expect(result.data[1]).toMatchObject({
+      index: "44",
+      name: "Статистика датчиков",
+      type: "LOGIC",
+      active: true,
+      predefined: false
     });
   });
 
