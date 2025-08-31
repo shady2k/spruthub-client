@@ -273,6 +273,40 @@ const responseRules = [
     })
   },
   {
+    match: (message) => message.params?.scenario?.get?.index === "83",
+    response: (message) => ({
+      id: message.id,
+      result: {
+        scenario: {
+          get: {
+            order: 83,
+            type: "BLOCK",
+            predefined: false,
+            active: true,
+            onStart: true,
+            sync: false,
+            error: false,
+            index: "83",
+            name: "Test Scenario",
+            desc: "Test Description",
+            data: "{}"
+          }
+        }
+      }
+    })
+  },
+  {
+    match: (message) => message.params?.scenario?.delete?.index === "92",
+    response: (message) => ({
+      id: message.id,
+      result: {
+        scenario: {
+          delete: {}
+        }
+      }
+    })
+  },
+  {
     match: (message) => message.params?.service?.types,
     response: (message) => ({
       id: message.id,
@@ -955,6 +989,32 @@ describe("Sprut WebSocket Client", () => {
       name: "Updated Scenario",
       desc: "Updated scenario description",
       iconsThen: ["code"]
+    });
+  });
+
+  test("get scenario command", async () => {
+    const result = await sprut.getScenario("83");
+
+    expect(result).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Success"
+    });
+    expect(result.data).toMatchObject({
+      index: "83",
+      name: "Test Scenario",
+      type: "BLOCK",
+      active: true
+    });
+  });
+
+  test("delete scenario command", async () => {
+    const result = await sprut.deleteScenario("92");
+
+    expect(result).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Success"
     });
   });
 

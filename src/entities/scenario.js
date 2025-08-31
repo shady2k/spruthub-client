@@ -29,6 +29,30 @@ class ScenarioManager {
     }
   }
 
+  async getScenario(index, expand) {
+    if (!index) {
+      throw new Error("Scenario index must be provided");
+    }
+
+    await this.ensureConnectionAndAuth();
+
+    try {
+      const getResult = await this.call({
+        scenario: {
+          get: {
+            index,
+            ...(expand && { expand })
+          }
+        }
+      });
+
+      return Helpers.handleApiResponse(getResult, ["scenario", "get"], this.log, "Scenario retrieved successfully");
+    } catch (error) {
+      this.log.error("Error getting scenario:", error);
+      throw error;
+    }
+  }
+
   async createScenario({ type = "BLOCK", name = "", desc = "", onStart = true, active = true, sync = false, data = "" }) {
     await this.ensureConnectionAndAuth();
 
@@ -124,6 +148,34 @@ class ScenarioManager {
       return updateResult;
     } catch (error) {
       this.log.error("Error updating scenario:", error);
+      throw error;
+    }
+  }
+
+  async deleteScenario(index) {
+    if (!index) {
+      throw new Error("Scenario index must be provided");
+    }
+
+    await this.ensureConnectionAndAuth();
+
+    try {
+      const deleteResult = await this.call({
+        scenario: {
+          delete: {
+            index
+          }
+        }
+      });
+
+      return Helpers.handleApiResponse(
+        deleteResult,
+        ["scenario", "delete"],
+        this.log,
+        "Scenario deleted successfully"
+      );
+    } catch (error) {
+      this.log.error("Error deleting scenario:", error);
       throw error;
     }
   }

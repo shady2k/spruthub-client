@@ -226,6 +226,14 @@ class Sprut {
     return await this.scenarioManager.updateScenario(index, data);
   }
 
+  async getScenario(index, expand) {
+    return await this.scenarioManager.getScenario(index, expand);
+  }
+
+  async deleteScenario(index) {
+    return await this.scenarioManager.deleteScenario(index);
+  }
+
   async getFullSystemInfo() {
     return await this.systemManager.getFullSystemInfo();
   }
