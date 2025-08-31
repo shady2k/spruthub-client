@@ -104,9 +104,9 @@ Creates a new `Sprut` client instance.
 #### Scenario Management (`scenarioManager`)
 
 -   `listScenarios()`: Retrieves a list of all scenarios.
--   `getScenario(index, expand)`: Retrieves a specific scenario by its index.
--   `createScenario(config)`: Creates a new scenario.
--   `updateScenario(index, data)`: Updates an existing scenario.
+-   `getScenario(index, expand)`: Retrieves a specific scenario by its index. If `expand` is set to `'data'`, the `data` property in the response will be a parsed JSON object if it contains JSON content (e.g., for code-based scenarios).
+-   `createScenario(config)`: Creates a new scenario. The `config` object can contain a `data` property which can be a string or an object. If it's an object, it will be automatically stringified to JSON.
+-   `updateScenario(index, data)`: Updates an existing scenario. The `data` parameter can be a string or an object. If it's an object, it will be automatically stringified to JSON.
 -   `deleteScenario(index)`: Deletes a scenario.
 
 #### System Management (`systemManager`)

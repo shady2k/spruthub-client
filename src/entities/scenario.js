@@ -53,10 +53,11 @@ class ScenarioManager {
     }
   }
 
-  async createScenario({ type = "BLOCK", name = "", desc = "", onStart = true, active = true, sync = false, data = "" }) {
+  async createScenario({ type = 'BLOCK', name = '', desc = '', onStart = true, active = true, sync = false, data = '' }) {
     await this.ensureConnectionAndAuth();
 
     try {
+      const dataToSend = typeof data === 'object' ? JSON.stringify(data) : data;
       const createResult = await this.call({
         scenario: {
           create: {
@@ -66,12 +67,12 @@ class ScenarioManager {
             onStart,
             active,
             sync,
-            data
-          }
-        }
+            data: dataToSend,
+          },
+        },
       });
 
-      this.log.info(createResult, "Scenario created successfully");
+      this.log.info(createResult, 'Scenario created successfully');
 
       if (createResult.error) {
         return {
@@ -86,7 +87,7 @@ class ScenarioManager {
           return {
             isSuccess: true,
             code: 0,
-            message: "Scenario created successfully",
+            message: 'Scenario created successfully',
             data: createResult.result.scenario.create,
           };
         } else {
@@ -96,33 +97,34 @@ class ScenarioManager {
 
       return createResult;
     } catch (error) {
-      this.log.error("Error creating scenario:", error);
+      this.log.error('Error creating scenario:', error);
       throw error;
     }
   }
 
   async updateScenario(index, data) {
     if (!index) {
-      throw new Error("Scenario index must be provided");
+      throw new Error('Scenario index must be provided');
     }
 
     if (!data) {
-      throw new Error("Scenario data must be provided");
+      throw new Error('Scenario data must be provided');
     }
 
     await this.ensureConnectionAndAuth();
 
     try {
+      const dataToSend = typeof data === 'object' ? JSON.stringify(data) : data;
       const updateResult = await this.call({
         scenario: {
           update: {
             index,
-            data
-          }
-        }
+            data: dataToSend,
+          },
+        },
       });
 
-      this.log.info(updateResult, "Scenario updated successfully");
+      this.log.info(updateResult, 'Scenario updated successfully');
 
       if (updateResult.error) {
         return {
@@ -137,7 +139,7 @@ class ScenarioManager {
           return {
             isSuccess: true,
             code: 0,
-            message: "Scenario updated successfully",
+            message: 'Scenario updated successfully',
             data: updateResult.result.scenario.update,
           };
         } else {
@@ -147,7 +149,7 @@ class ScenarioManager {
 
       return updateResult;
     } catch (error) {
-      this.log.error("Error updating scenario:", error);
+      this.log.error('Error updating scenario:', error);
       throw error;
     }
   }

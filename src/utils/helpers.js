@@ -57,10 +57,17 @@ class Helpers {
       // Handle both formats: direct result or nested result
       const nestedResult = this.getNestedProperty(result.result, nestedPath);
       if (nestedResult) {
+        if (nestedResult.data && typeof nestedResult.data === 'string') {
+          try {
+            nestedResult.data = JSON.parse(nestedResult.data);
+          } catch (e) {
+            logger.warn('Failed to parse nestedResult.data as JSON:', nestedResult.data);
+          }
+        }
         return {
           isSuccess: true,
           code: 0,
-          message: "Success",
+          message: 'Success',
           data: nestedResult,
         };
       } else {
