@@ -202,6 +202,89 @@ const responseRules = [
         }
       }
     })
+  },
+  {
+    match: (message) => message.params?.scenario?.list,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        scenario: {
+          list: {
+            scenarios: [
+              {
+                order: 1,
+                type: "BLOCK",
+                predefined: false,
+                active: true,
+                onStart: false,
+                sync: false,
+                error: false,
+                index: "1",
+                name: "Test Scenario",
+                desc: "A test scenario for automation"
+              },
+              {
+                order: 2,
+                type: "BLOCK",
+                predefined: false,
+                active: false,
+                onStart: true,
+                sync: false,
+                error: false,
+                index: "2",
+                name: "Morning Routine",
+                desc: "Morning automation routine"
+              }
+            ]
+          }
+        }
+      }
+    })
+  },
+  {
+    match: (message) => message.params?.scenario?.create,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        scenario: {
+          create: {
+            order: 3,
+            type: message.params.scenario.create.type,
+            predefined: false,
+            active: message.params.scenario.create.active,
+            onStart: message.params.scenario.create.onStart,
+            sync: message.params.scenario.create.sync,
+            error: false,
+            index: "3",
+            name: message.params.scenario.create.name,
+            desc: message.params.scenario.create.desc
+          }
+        }
+      }
+    })
+  },
+  {
+    match: (message) => message.params?.scenario?.update,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        scenario: {
+          update: {
+            order: 3,
+            type: "BLOCK",
+            predefined: false,
+            active: true,
+            onStart: true,
+            sync: false,
+            error: false,
+            index: message.params.scenario.update.index,
+            name: "Updated Scenario",
+            desc: "Updated scenario description",
+            iconsThen: ["code"]
+          }
+        }
+      }
+    })
   }
 ];
 
@@ -256,11 +339,11 @@ describe("Sprut WebSocket Client", () => {
   });
 
   test("handles WebSocket connection", async () => {
-    expect(sprut.isConnected).toBe(true);
+    expect(sprut.wsManager.isConnected).toBe(true);
   });
 
   test("authentication flow", async () => {
-    const authResult = await sprut.auth();
+    const authResult = await sprut.authManager.authenticate();
     expect(authResult.isError).toBe(false);
     expect(authResult.result.token).toBe("testToken");
   });
@@ -330,7 +413,7 @@ describe("Sprut WebSocket Client", () => {
     // Wait for reconnection
     setTimeout(async () => {
       await sprut.connected();
-      expect(sprut.isConnected).toBe(true);
+      expect(sprut.wsManager.isConnected).toBe(true);
       done();
     }, 6000); // Increased timeout to account for reconnection delay
   }, 8000);
@@ -489,13 +572,96 @@ describe("Sprut WebSocket Client", () => {
     expect(systemInfo).toHaveProperty('hubs');
     expect(systemInfo).toHaveProperty('accessories');
     expect(systemInfo).toHaveProperty('rooms');
+    expect(systemInfo).toHaveProperty('scenarios');
     expect(systemInfo).toHaveProperty('controllableDevices');
     expect(systemInfo).toHaveProperty('errors');
     
     expect(Array.isArray(systemInfo.hubs)).toBe(true);
     expect(Array.isArray(systemInfo.accessories)).toBe(true);
     expect(Array.isArray(systemInfo.rooms)).toBe(true);
+    expect(Array.isArray(systemInfo.scenarios)).toBe(true);
     expect(Array.isArray(systemInfo.controllableDevices)).toBe(true);
     expect(Array.isArray(systemInfo.errors)).toBe(true);
+  });
+
+  test("list scenarios command", async () => {
+    const result = await sprut.listScenarios();
+
+    expect(result).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Success"
+    });
+    expect(Array.isArray(result.data)).toBe(true);
+    expect(result.data).toHaveLength(2);
+    expect(result.data[0]).toMatchObject({
+      index: "1",
+      name: "Test Scenario",
+      type: "BLOCK",
+      active: true
+    });
+  });
+
+  test("create scenario command", async () => {
+    const result = await sprut.createScenario({
+      type: "BLOCK",
+      name: "New Test Scenario",
+      desc: "A newly created test scenario",
+      onStart: false,
+      active: true,
+      sync: false,
+      data: ""
+    });
+
+    expect(result).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Scenario created successfully"
+    });
+    expect(result.data).toMatchObject({
+      index: "3",
+      name: "New Test Scenario",
+      desc: "A newly created test scenario",
+      type: "BLOCK",
+      active: true,
+      onStart: false,
+      sync: false
+    });
+  });
+
+  test("update scenario command", async () => {
+    const testData = JSON.stringify({
+      blockId: 0,
+      targets: [{
+        type: "code",
+        code: "log.info(\"updated test\")\n"
+      }]
+    });
+
+    const result = await sprut.updateScenario("3", testData);
+
+    expect(result).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Scenario updated successfully"
+    });
+    expect(result.data).toMatchObject({
+      index: "3",
+      name: "Updated Scenario",
+      desc: "Updated scenario description",
+      iconsThen: ["code"]
+    });
+  });
+
+  test("scenario validation errors", async () => {
+    // Test missing scenario index for update
+    await expect(
+      sprut.updateScenario("", "some data")
+    ).rejects.toThrow("Scenario index must be provided");
+
+    // Test missing scenario data for update
+    await expect(
+      sprut.updateScenario("1", "")
+    ).rejects.toThrow("Scenario data must be provided");
   });
 });

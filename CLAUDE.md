@@ -6,9 +6,20 @@ This is a Node.js WebSocket client library for communicating with Sprut's smart 
 ## Project Structure
 ```
 src/
-├── index.js      # Main entry point - exports Sprut and Queue classes
-├── sprut.js      # WebSocket client with authentication and device control
-└── queue.js      # Request/response queue with timeout management
+├── index.js              # Main entry point - exports Sprut and Queue classes
+├── queue.js              # Request/response queue with timeout management
+├── core/
+│   ├── websocket.js      # WebSocket connection management
+│   ├── auth.js           # Authentication flow
+│   └── client.js         # Main Sprut class (orchestrator)
+├── entities/
+│   ├── device.js         # Device/accessory management
+│   ├── hub.js            # Hub management
+│   ├── room.js           # Room management
+│   ├── scenario.js       # Scenario management
+│   └── system.js         # System aggregation methods
+└── utils/
+    └── helpers.js        # Utility functions
 
 tests/
 ├── sprut.test.js # Integration tests for main client
@@ -17,19 +28,48 @@ tests/
 
 ## Key Components
 
-### Sprut Class (`src/sprut.js`)
-Main WebSocket client with:
+### Sprut Class (`src/core/client.js`)
+Main WebSocket client orchestrator that composes all managers:
 - Auto-reconnection on connection loss
 - Three-step authentication flow (auth → email → password → token)
 - Device command execution (currently only 'update' command)
 - Server version retrieval
 - Request/response correlation using unique IDs
 
+### WebSocketManager (`src/core/websocket.js`)
+WebSocket connection management:
+- Connection/disconnection handling
+- Auto-reconnection with configurable delay
+- Event-driven architecture with custom handlers
+- Message sending with promise-based error handling
+
+### AuthManager (`src/core/auth.js`)
+Authentication flow management:
+- Three-step authentication process
+- Token lifecycle management
+- Automatic token refresh on expiration
+- Authentication state tracking
+
+### Entity Managers (`src/entities/`)
+Domain-specific functionality:
+- **DeviceManager**: Device discovery, control, and characteristic management
+- **HubManager**: Hub discovery, client info, and server version
+- **RoomManager**: Room discovery and device filtering
+- **ScenarioManager**: Automation scenario CRUD operations
+- **SystemManager**: System-wide information aggregation
+
 ### Queue Class (`src/queue.js`)
 Request queue management:
 - Maps request IDs to callback functions
 - 30-second default timeout for requests
 - Automatic cleanup to prevent memory leaks
+
+### Helpers (`src/utils/helpers.js`)
+Utility functions:
+- Nested property access
+- Value type determination
+- Control value creation
+- Standardized API response handling
 
 ## Dependencies
 - **ws**: WebSocket client library (runtime)
@@ -91,12 +131,17 @@ await client.close();
 - `listHubs()` - Get hub information and status
 - `listAccessories(expand)` - Get all devices with services/characteristics
 - `listRooms()` - Get room information
-- `getFullSystemInfo()` - Get complete system state
+- `listScenarios()` - Get all automation scenarios
+- `getFullSystemInfo()` - Get complete system state (hubs, devices, rooms, scenarios)
 
 ### Control Methods  
 - `execute(command, params)` - Execute device commands
 - `setClientInfo(info)` - Set WebSocket client information
 - `version()` - Get server version information
+
+### Scenario Management Methods
+- `createScenario(config)` - Create new automation scenario
+- `updateScenario(index, data)` - Update existing scenario configuration
 
 ### Helper Methods
 - `getDevicesByRoom(accessories, roomId)` - Filter devices by room
@@ -117,6 +162,49 @@ This library is designed to work seamlessly with MCP (Model Context Protocol) se
 2. **Device Control**: Use `execute()` with proper value types for device control
 3. **State Reading**: Access current device states from the discovery data
 4. **Room Organization**: Filter and organize devices by rooms for better UX
+5. **Scenario Management**: Use scenario methods for automation control
+
+## Scenario API Details
+
+### Scenario Structure
+Scenarios have the following properties:
+- `index` - Unique scenario identifier (string)
+- `name` - Human-readable scenario name
+- `desc` - Scenario description
+- `type` - Scenario type (typically "BLOCK")
+- `active` - Whether scenario is enabled
+- `onStart` - Whether to run on system startup
+- `sync` - Whether scenario runs synchronously
+- `order` - Display order in UI
+- `data` - JSON string containing scenario logic/configuration
+
+### Example Usage
+```javascript
+// List all scenarios
+const scenarios = await client.listScenarios();
+
+// Create a new scenario
+const newScenario = await client.createScenario({
+  type: "BLOCK",
+  name: "Evening Routine",
+  desc: "Turn off lights and lock doors",
+  onStart: false,
+  active: true,
+  sync: false,
+  data: ""
+});
+
+// Update scenario with automation logic
+const scenarioData = JSON.stringify({
+  blockId: 0,
+  targets: [{
+    type: "code",
+    code: "log.info('Evening routine executed')\n"
+  }]
+});
+
+await client.updateScenario(newScenario.data.index, scenarioData);
+```
 
 ## Recent Enhancements (2025-01-20)
 ✅ Added comprehensive device discovery methods
@@ -127,3 +215,18 @@ This library is designed to work seamlessly with MCP (Model Context Protocol) se
 ✅ Comprehensive JSDoc documentation
 ✅ Full test coverage for new functionality
 ✅ Ready for MCP server and HTTP bridge integration
+
+## Recent Enhancements (2025-08-31)
+✅ Added scenario management functionality
+✅ Added `listScenarios()` method for automation discovery
+✅ Added `createScenario()` method for scenario creation
+✅ Added `updateScenario()` method for scenario configuration
+✅ Updated `getFullSystemInfo()` to include scenarios
+✅ Added comprehensive scenario test coverage
+✅ Enhanced documentation with scenario API details
+✅ **Major Refactoring**: Split monolithic `sprut.js` into entity-based architecture
+✅ **Improved Maintainability**: Separated concerns into core, entities, and utils
+✅ **Enhanced Testability**: Smaller, focused modules with clear responsibilities
+✅ **Better Code Organization**: Domain-driven design with composition pattern
+✅ **Preserved API Compatibility**: All existing functionality maintained
+✅ **Improved Code Coverage**: Better test coverage with modular structure

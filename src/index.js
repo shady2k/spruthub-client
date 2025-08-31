@@ -1,4 +1,4 @@
-const Sprut = require('./sprut');
+const Sprut = require('./core/client');
 const Queue = require('./queue');
 
 module.exports = {
