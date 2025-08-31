@@ -20,7 +20,13 @@
     "mcp",
     "model-context-protocol",
     "iot",
-    "home-automation"
+    "home-automation",
+    "json-rpc",
+    "schema",
+    "api-schema",
+    "openapi",
+    "typescript",
+    "api-discovery"
   ],
   "author": "shady2k <shady2k@gmail.com>",
   "license": "MIT",

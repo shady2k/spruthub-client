@@ -1,0 +1,82 @@
+/**
+ * System-related method schemas (high-level aggregations)
+ */
+
+const systemMethods = {
+  'system.getFullInfo': {
+    description: 'Get complete system information including hubs, devices, rooms, and scenarios',
+    category: 'system',
+    method: 'system.getFullInfo',
+    params: {
+      type: 'object',
+      properties: {},
+      additionalProperties: false
+    },
+    result: {
+      type: 'object',
+      properties: {
+        hubs: {
+          type: 'array',
+          description: 'All hubs in the system'
+        },
+        accessories: {
+          type: 'array',
+          description: 'All accessories/devices with full details',
+          items: { $ref: '#/definitions/Accessory' }
+        },
+        rooms: {
+          type: 'array',
+          description: 'All rooms'
+        },
+        scenarios: {
+          type: 'array',
+          description: 'All scenarios',
+          items: { $ref: '#/definitions/Scenario' }
+        },
+        controllableDevices: {
+          type: 'array',
+          description: 'Filtered list of controllable characteristics',
+          items: { $ref: '#/definitions/ControllableCharacteristic' }
+        }
+      }
+    },
+    examples: [
+      {
+        description: 'Get complete system information',
+        request: {
+          params: {}
+        }
+      }
+    ]
+  },
+
+  'system.version': {
+    description: 'Get version information',
+    category: 'system', 
+    method: 'system.version',
+    params: {
+      type: 'object',
+      properties: {},
+      additionalProperties: false
+    },
+    result: {
+      type: 'object',
+      properties: {
+        version: { type: 'string' },
+        revision: { type: 'number' },
+        build: { type: 'string' },
+        platform: { type: 'string' }
+      }
+    },
+    examples: [
+      {
+        description: 'Get system version',
+        request: {
+          params: {}
+        }
+      }
+    ]
+  }
+};
+
+module.exports = systemMethods;

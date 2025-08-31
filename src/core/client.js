@@ -6,6 +6,7 @@ const HubManager = require('../entities/hub');
 const RoomManager = require('../entities/room');
 const ScenarioManager = require('../entities/scenario');
 const SystemManager = require('../entities/system');
+const SchemaManager = require('../schemas');
 
 class Sprut {
   constructor(opts) {
@@ -236,6 +237,31 @@ class Sprut {
 
   async getFullSystemInfo() {
     return await this.systemManager.getFullSystemInfo();
+  }
+
+  // Schema methods
+  getSchema() {
+    return SchemaManager.schema;
+  }
+
+  getAvailableMethods() {
+    return SchemaManager.getAvailableMethods();
+  }
+
+  getMethodSchema(methodName) {
+    return SchemaManager.getMethodSchema(methodName);
+  }
+
+  getMethodsByCategory(category) {
+    return SchemaManager.getMethodsByCategory(category);
+  }
+
+  getCategories() {
+    return SchemaManager.getCategories();
+  }
+
+  getTypeDefinition(typeName) {
+    return SchemaManager.getTypeDefinition(typeName);
   }
 }
 
