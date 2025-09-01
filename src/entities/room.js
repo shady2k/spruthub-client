@@ -29,6 +29,30 @@ class RoomManager {
     }
   }
 
+  async getRoom(roomId) {
+    await this.ensureConnectionAndAuth();
+
+    try {
+      const roomResult = await this.call({
+        room: {
+          get: {
+            id: roomId
+          }
+        }
+      });
+
+      return Helpers.handleApiResponse(
+        roomResult,
+        ["room", "get"],
+        this.log,
+        "Room retrieved successfully"
+      );
+    } catch (error) {
+      this.log.error(`Error getting room ${roomId}:`, error);
+      throw error;
+    }
+  }
+
   getDevicesByRoom(accessories, roomId) {
     if (!Array.isArray(accessories)) {
       return [];

@@ -217,6 +217,22 @@ const responseRules = [
     })
   },
   {
+    match: (message) => message.params?.room?.get?.id === 13,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        room: {
+          get: {
+            id: 13,
+            order: 0,
+            visible: true,
+            name: "Мой дом"
+          }
+        }
+      }
+    })
+  },
+  {
     match: (message) => message.params?.server?.clientInfo,
     response: (message) => ({
       id: message.id,
@@ -732,6 +748,22 @@ describe("Sprut WebSocket Client", () => {
       message: "Success"
     });
     expect(Array.isArray(result.data)).toBe(true);
+  });
+
+  test("get room command", async () => {
+    const result = await sprut.roomManager.getRoom(13);
+
+    expect(result).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Success"
+    });
+    expect(result.data).toMatchObject({
+      id: 13,
+      name: "Мой дом",
+      order: 0,
+      visible: true
+    });
   });
 
   test("get service types command", async () => {

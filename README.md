@@ -2,6 +2,12 @@
 
 A WebSocket client library for communicating with [Sprut.hub](https://spruthub.ru/) smart home ecosystem. Provides both client functionality and comprehensive JSON-RPC API schema definitions for building integrations.
 
+## Recent Changes (v1.2.6)
+
+- **Standardized API Response Format**: All client methods now return consistent `{ isSuccess, code, message, data }` structure
+- **Improved Error Handling**: Unified error handling across all managers using `Helpers.handleApiResponse`
+- **Schema Alignment**: Updated schema definitions to reflect actual API response structures with data wrapper objects
+
 ## Installation
 
 ```bash
@@ -37,9 +43,11 @@ const result = await client.execute('characteristic.update', {
   cId: 'characteristic-id',
   control: { value: { boolValue: true } }
 });
+console.log(result); // { isSuccess: true, code: 0, message: "Success", data: {...} }
 
 // Get server version
 const version = await client.version();
+console.log(version); // { isSuccess: true, code: 0, message: "Success", data: {...} }
 
 // Close connection
 await client.close();
@@ -79,6 +87,8 @@ const accessoryType = Schema.getTypeDefinition('Accessory');
 
 #### Methods
 
+All methods return standardized response format: `{ isSuccess, code, message, data }`
+
 - `connected()`: Promise that resolves when WebSocket is connected
 - `execute(command, params)`: Execute device command
 - `version()`: Get server version information
@@ -86,8 +96,24 @@ const accessoryType = Schema.getTypeDefinition('Accessory');
 - `listAccessories(expand)`: List all accessories with optional expansion
 - `listRooms()`: List all rooms
 - `getScenario(id, expand)`: Get scenario by ID
+- `listScenarios()`: List all scenarios
+- `createScenario(scenarioData)`: Create new scenario
+- `updateScenario(id, scenarioData)`: Update existing scenario
 - `getFullSystemInfo()`: Get complete system information
 - `close()`: Close WebSocket connection
+
+#### Response Format
+
+All API methods return a consistent response structure:
+
+```javascript
+{
+  isSuccess: boolean,  // true for successful operations
+  code: number,        // 0 for success, error codes for failures
+  message: string,     // Human-readable status message
+  data: object|array   // Response payload (null for errors)
+}
+```
 
 ### Schema System
 

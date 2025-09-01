@@ -65,6 +65,86 @@ const roomMethods = {
         }
       }
     ]
+  },
+
+  'room.get': {
+    description: 'Get a specific room by ID',
+    category: 'room',
+    method: 'room.get',
+    params: {
+      type: 'object',
+      properties: {
+        room: {
+          type: 'object',
+          properties: {
+            get: {
+              type: 'object',
+              properties: {
+                id: {
+                  type: 'number',
+                  description: 'Room ID to retrieve'
+                }
+              },
+              required: ['id'],
+              additionalProperties: false
+            }
+          },
+          required: ['get'],
+          additionalProperties: false
+        }
+      },
+      required: ['room'],
+      additionalProperties: false
+    },
+    result: {
+      type: 'object',
+      properties: {
+        isSuccess: { type: 'boolean' },
+        code: { type: 'number' },
+        message: { type: 'string' },
+        data: {
+          type: 'object',
+          properties: {
+            room: {
+              type: 'object',
+              properties: {
+                id: { type: 'number' },
+                name: { type: 'string' },
+                order: { type: 'number' },
+                visible: { type: 'boolean' }
+              },
+              required: ['id', 'name']
+            }
+          }
+        }
+      }
+    },
+    examples: [
+      {
+        description: 'Get room with ID 13',
+        request: {
+          params: {
+            room: {
+              get: {
+                id: 13
+              }
+            }
+          }
+        },
+        response: {
+          result: {
+            room: {
+              get: {
+                id: 13,
+                order: 0,
+                visible: true,
+                name: "Мой дом"
+              }
+            }
+          }
+        }
+      }
+    ]
   }
 };
 
