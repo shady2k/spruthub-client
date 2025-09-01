@@ -263,6 +263,92 @@ class Sprut {
   getTypeDefinition(typeName) {
     return SchemaManager.getTypeDefinition(typeName);
   }
+
+  // Generic method caller - executes any JSON-RPC method dynamically
+  async callMethod(methodName, requestData = {}) {
+    await this.ensureConnectionAndAuthentication();
+    
+    // Get the method schema to understand the expected parameter structure
+    const methodSchema = this.getMethodSchema(methodName);
+    if (!methodSchema) {
+      throw new Error(`Method ${methodName} not found in schema`);
+    }
+
+    // Build parameters dynamically from schema structure
+    const params = this.buildParamsFromSchema(methodSchema.params, requestData);
+
+    try {
+      const result = await this.call(params);
+      
+      // Wrap JSON-RPC response in standardized format
+      if (result.error) {
+        return {
+          isSuccess: false,
+          code: result.error.code || -1,
+          message: result.error.message || 'Unknown error',
+          data: result.error.data || {}
+        };
+      }
+      
+      if (result.result) {
+        // Extract the actual data from the nested JSON-RPC response
+        const [category, action] = methodName.split('.');
+        let extractedData = result.result;
+        
+        // Navigate through the nested structure to get the actual data
+        if (extractedData[category] && extractedData[category][action]) {
+          extractedData = extractedData[category][action];
+        }
+        
+        return {
+          isSuccess: true,
+          code: 0,
+          message: 'Success',
+          data: extractedData
+        };
+      }
+      
+      return {
+        isSuccess: false,
+        code: -1,
+        message: 'Unexpected response format',
+        data: {}
+      };
+    } catch (error) {
+      this.log.error(`Error calling ${methodName}:`, error);
+      throw error;
+    }
+  }
+
+  // Build parameters dynamically based on schema
+  buildParamsFromSchema(schemaParams, requestData, flatRequestData = null) {
+    if (!schemaParams || !schemaParams.properties) {
+      return {};
+    }
+
+    // Keep reference to flat data for finding path/query params
+    if (flatRequestData === null) {
+      flatRequestData = requestData;
+    }
+
+    const params = {};
+    
+    // Iterate through the schema properties to build the parameter structure
+    for (const [key, value] of Object.entries(schemaParams.properties)) {
+      if (value.type === 'object' && value.properties) {
+        params[key] = this.buildParamsFromSchema(value, requestData[key] || {}, flatRequestData);
+      } else {
+        // For leaf values, first try nested data, then fall back to flat data
+        if (requestData[key] !== undefined) {
+          params[key] = requestData[key];
+        } else if (flatRequestData[key] !== undefined) {
+          params[key] = flatRequestData[key];
+        }
+      }
+    }
+
+    return params;
+  }
 }
 
 module.exports = Sprut;

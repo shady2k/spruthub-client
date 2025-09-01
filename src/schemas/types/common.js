@@ -53,10 +53,30 @@ const commonTypes = {
   // Control value structure
   ControlValue: {
     oneOf: [
-      { type: 'object', properties: { boolValue: { type: 'boolean' } } },
-      { type: 'object', properties: { intValue: { type: 'integer' } } },
-      { type: 'object', properties: { stringValue: { type: 'string' } } },
-      { type: 'object', properties: { floatValue: { type: 'number' } } }
+      { 
+        type: 'object', 
+        properties: { boolValue: { type: 'boolean' } },
+        required: ['boolValue'],
+        additionalProperties: false
+      },
+      { 
+        type: 'object', 
+        properties: { intValue: { type: 'integer' } },
+        required: ['intValue'],
+        additionalProperties: false
+      },
+      { 
+        type: 'object', 
+        properties: { stringValue: { type: 'string' } },
+        required: ['stringValue'],
+        additionalProperties: false
+      },
+      { 
+        type: 'object', 
+        properties: { floatValue: { type: 'number' } },
+        required: ['floatValue'],
+        additionalProperties: false
+      }
     ]
   }
 };

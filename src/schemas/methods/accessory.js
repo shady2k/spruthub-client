@@ -80,7 +80,7 @@ const accessoryMethods = {
     description: 'Update a characteristic value on a device',
     category: 'accessory',
     method: 'characteristic.update',
-    rest: { method: 'PATCH', path: '/characteristics' },
+    rest: { method: 'POST', path: '/characteristics' },
     params: {
       type: 'object',
       properties: {
@@ -125,10 +125,21 @@ const accessoryMethods = {
     result: {
       type: 'object',
       properties: {
-        isSuccess: { type: 'boolean' },
-        code: { type: 'number' },
-        message: { type: 'string' }
-      }
+        characteristic: {
+          type: 'object',
+          properties: {
+            update: {
+              type: 'object',
+              properties: {},
+              additionalProperties: false
+            }
+          },
+          required: ['update'],
+          additionalProperties: false
+        }
+      },
+      required: ['characteristic'],
+      additionalProperties: false
     },
     examples: [
       {

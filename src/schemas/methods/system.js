@@ -59,14 +59,26 @@ const systemMethods = {
     ]
   },
 
-  'system.version': {
+  'server.version': {
     description: 'Get version information',
     category: 'system', 
-    method: 'system.version',
-    rest: { method: 'GET', path: '/system/version' },
+    method: 'server.version',
+    rest: { method: 'GET', path: '/server/version' },
     params: {
       type: 'object',
-      properties: {},
+      properties: {
+        server: {
+          type: 'object',
+          properties: {
+            version: {
+              type: 'object',
+              properties: {},
+              additionalProperties: false
+            }
+          },
+          additionalProperties: false
+        }
+      },
       additionalProperties: false
     },
     result: {

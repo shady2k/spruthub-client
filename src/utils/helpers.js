@@ -52,18 +52,22 @@ class Helpers {
         isSuccess: false,
         code: result.error.code || -1,
         message: result.error.message || 'Unknown error',
-        data: result.error.data || null
+        data: result.error.data || {}
       };
     }
 
     // Handle successful JSON-RPC responses
     if (result.result) {
       // Extract the actual data from the nested JSON-RPC result structure
-      let data = null;
+      let data = {};
       
       if (nestedPath && nestedPath.length > 0) {
         // Try to extract nested data using the provided path
-        data = this.getNestedProperty(result.result, nestedPath);
+        const extractedData = this.getNestedProperty(result.result, nestedPath);
+
+        if (extractedData !== undefined && extractedData !== null) {
+          data = extractedData;
+        }
         
         // If nested data has a string 'data' property, try to parse it as JSON
         if (data && data.data && typeof data.data === 'string') {
@@ -73,9 +77,6 @@ class Helpers {
             logger.warn('Failed to parse nested data as JSON:', data.data);
           }
         }
-      } else {
-        // Use the entire result as data
-        data = result.result;
       }
 
       return {
@@ -91,7 +92,7 @@ class Helpers {
       isSuccess: false,
       code: -1,
       message: 'Unexpected response format',
-      data: result
+      data: {}
     };
   }
 }

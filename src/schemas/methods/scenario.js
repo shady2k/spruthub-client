@@ -73,7 +73,10 @@ const scenarioMethods = {
               type: 'object',
               properties: {
                 index: { 
-                  type: ['number', 'string'],
+                  oneOf: [
+                    { type: 'number' },
+                    { type: 'string' }
+                  ],
                   description: 'Scenario index/ID (can be numeric or string)'
                 },
                 expand: { 
@@ -148,9 +151,9 @@ const scenarioMethods = {
               properties: {
                 name: { 
                   type: 'string',
-                  minLength: 1,
                   maxLength: 255,
-                  description: 'Scenario name'
+                  description: 'Scenario name',
+                  default: ''
                 },
                 desc: { 
                   type: 'string',
@@ -183,7 +186,7 @@ const scenarioMethods = {
                   description: 'Scenario data (JSON string)'
                 }
               },
-              required: ['name'],
+              required: [],
               additionalProperties: false
             }
           },
@@ -210,33 +213,18 @@ const scenarioMethods = {
     },
     examples: [
       {
-        description: 'Create a simple block scenario',
+        description: 'Create a minimal block scenario',
         request: {
           params: {
             scenario: {
               create: {
-                name: 'Evening Lights',
-                desc: 'Turn on evening lighting',
-                type: 'BLOCK',
-                data: '{"blocks": []}'
-              }
-            }
-          }
-        }
-      },
-      {
-        description: 'Create minimal block scenario',
-        request: {
-          params: {
-            scenario: {
-              create: {
-                type: 'BLOCK',
-                name: 'My Scenario',
-                desc: 'Scenario description',
+                name: "",
+                desc: "",
+                type: "BLOCK",
+                active: false,
                 onStart: true,
-                active: true,
                 sync: false,
-                data: '{"blockId":0,"targets":[]}'
+                data: ""
               }
             }
           }
@@ -249,7 +237,7 @@ const scenarioMethods = {
     description: 'Update an existing scenario',
     category: 'scenario',
     method: 'scenario.update',
-    rest: { method: 'PUT', path: '/scenarios/:index' },
+    rest: { method: 'PUT', path: '/scenarios' },
     params: {
       type: 'object',
       properties: {
@@ -260,15 +248,48 @@ const scenarioMethods = {
               type: 'object',
               properties: {
                 index: { 
-                  type: ['number', 'string'],
-                  description: 'Scenario index/ID (can be numeric or string)'
+                  type: 'string',
+                  description: 'Scenario index/ID (string format, e.g., "95")'
+                },
+                name: { 
+                  type: 'string',
+                  maxLength: 255,
+                  description: 'Scenario name',
+                  default: ''
+                },
+                desc: { 
+                  type: 'string',
+                  description: 'Scenario description',
+                  default: ''
+                },
+                type: { 
+                  type: 'string',
+                  enum: ['BLOCK', 'CLASSIC'],
+                  description: 'Scenario type',
+                  default: 'BLOCK'
+                },
+                active: { 
+                  type: 'boolean',
+                  description: 'Whether scenario is active',
+                  default: true
+                },
+                onStart: { 
+                  type: 'boolean',
+                  description: 'Run on system start',
+                  default: true
+                },
+                sync: { 
+                  type: 'boolean',
+                  description: 'Synchronous execution',
+                  default: false
                 },
                 data: { 
                   type: 'string',
-                  description: 'Updated scenario data (JSON string)'
+                  description: 'Updated scenario data as JSON string (e.g., "{\"blockId\":0,\"targets\":[]}")',
+                  minLength: 0
                 }
               },
-              required: ['index', 'data'],
+              required: ['index'],
               additionalProperties: false
             }
           },
@@ -282,33 +303,34 @@ const scenarioMethods = {
     result: {
       type: 'object',
       properties: {
-        isSuccess: { type: 'boolean' },
-        code: { type: 'number' },
-        message: { type: 'string' }
-      }
+        scenario: {
+          type: 'object',
+          properties: {
+            update: {
+              type: 'object',
+              properties: {},
+              additionalProperties: false
+            }
+          },
+          required: ['update'],
+          additionalProperties: false
+        }
+      },
+      required: ['scenario'],
+      additionalProperties: false
     },
     examples: [
       {
-        description: 'Update scenario with numeric index',
+        description: 'Update scenario with name and code block',
         request: {
           params: {
             scenario: {
               update: {
-                index: 1,
-                data: '{"blocks": [{"type": "action"}]}'
-              }
-            }
-          }
-        }
-      },
-      {
-        description: 'Update scenario with string index',
-        request: {
-          params: {
-            scenario: {
-              update: {
-                index: 'scenario-id',
-                data: '{"blockId":0,"targets":[{"type":"code","code":"log.info(\"example\")"}]}'
+                index: "95",
+                name: "Test Scenario",
+                desc: "A test scenario with logging",
+                active: true,
+                data: '{"blockId":0,"targets":[{"type":"code","code":"log.info(\\"test\\")\\n"}]}'
               }
             }
           }
@@ -350,10 +372,21 @@ const scenarioMethods = {
     result: {
       type: 'object',
       properties: {
-        isSuccess: { type: 'boolean' },
-        code: { type: 'number' },
-        message: { type: 'string' }
-      }
+        scenario: {
+          type: 'object',
+          properties: {
+            delete: {
+              type: 'object',
+              properties: {},
+              additionalProperties: false
+            }
+          },
+          required: ['delete'],
+          additionalProperties: false
+        }
+      },
+      required: ['scenario'],
+      additionalProperties: false
     },
     examples: [
       {
