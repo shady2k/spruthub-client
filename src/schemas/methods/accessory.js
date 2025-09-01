@@ -7,6 +7,7 @@ const accessoryMethods = {
     description: 'List all accessories (smart devices) with their services and characteristics',
     category: 'accessory',
     method: 'accessory.list',
+    rest: { method: 'GET', path: '/accessories' },
     params: {
       type: 'object',
       properties: {
@@ -79,6 +80,7 @@ const accessoryMethods = {
     description: 'Update a characteristic value on a device',
     category: 'accessory',
     method: 'characteristic.update',
+    rest: { method: 'PATCH', path: '/characteristics' },
     params: {
       type: 'object',
       properties: {

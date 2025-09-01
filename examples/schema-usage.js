@@ -92,10 +92,10 @@ async function demonstrateSchemaUsage() {
   
   // Example of how sprut-http-bridge could use this
   console.log('   // Example: Auto-generate Express routes');
-  console.log('   Schema.getAvailableMethods().forEach(methodName => {');
-  console.log('     const schema = Schema.getMethodSchema(methodName);');
-  console.log('     console.log(`   Route: ${methodName} -> ${schema.category}`);');
-  console.log('   });');
+  console.log('   Schema.getAvailableMethods().forEach(methodName => {
+     const schema = Schema.getMethodSchema(methodName);
+     console.log(`   Route: ${methodName} -> ${schema.category}`);
+   });
   console.log();
   
   Schema.getAvailableMethods().slice(0, 5).forEach(methodName => {

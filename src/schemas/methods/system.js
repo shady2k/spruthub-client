@@ -7,6 +7,7 @@ const systemMethods = {
     description: 'Get complete system information including hubs, devices, rooms, and scenarios',
     category: 'system',
     method: 'system.getFullInfo',
+    rest: { method: 'GET', path: '/system/full-info' },
     params: {
       type: 'object',
       properties: {},
@@ -62,6 +63,7 @@ const systemMethods = {
     description: 'Get version information',
     category: 'system', 
     method: 'system.version',
+    rest: { method: 'GET', path: '/system/version' },
     params: {
       type: 'object',
       properties: {},

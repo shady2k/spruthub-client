@@ -7,6 +7,7 @@ const scenarioMethods = {
     description: 'List all scenarios',
     category: 'scenario',
     method: 'scenario.list',
+    rest: { method: 'GET', path: '/scenarios' },
     params: {
       type: 'object',
       properties: {
@@ -61,6 +62,7 @@ const scenarioMethods = {
     description: 'Get a specific scenario by index',
     category: 'scenario',
     method: 'scenario.get',
+    rest: { method: 'GET', path: '/scenarios/:index' },
     params: {
       type: 'object',
       properties: {
@@ -134,6 +136,7 @@ const scenarioMethods = {
     description: 'Create a new scenario',
     category: 'scenario',
     method: 'scenario.create',
+    rest: { method: 'POST', path: '/scenarios' },
     params: {
       type: 'object',
       properties: {
@@ -246,6 +249,7 @@ const scenarioMethods = {
     description: 'Update an existing scenario',
     category: 'scenario',
     method: 'scenario.update',
+    rest: { method: 'PUT', path: '/scenarios/:index' },
     params: {
       type: 'object',
       properties: {
@@ -304,7 +308,7 @@ const scenarioMethods = {
             scenario: {
               update: {
                 index: 'scenario-id',
-                data: '{"blockId":0,"targets":[{"type":"code","code":"log.info(\\"example\\")"}]}'
+                data: '{"blockId":0,"targets":[{"type":"code","code":"log.info(\"example\")"}]}'
               }
             }
           }
@@ -317,6 +321,7 @@ const scenarioMethods = {
     description: 'Delete a scenario',
     category: 'scenario',
     method: 'scenario.delete',
+    rest: { method: 'DELETE', path: '/scenarios/:index' },
     params: {
       type: 'object',
       properties: {

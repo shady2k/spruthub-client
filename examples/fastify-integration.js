@@ -92,29 +92,15 @@ function generateFastifyIntegration() {
 
   // Show route generation pattern
   console.log('4. Automatic Route Generation Pattern:');
-  console.log('   This could replace manual route definitions:');
+  console.log('   Using getRestMethods() to dynamically generate routes:');
   console.log();
 
-  const routeMappings = {
-    'hub.list': { path: '/hubs', method: 'GET' },
-    'accessory.list': { path: '/accessories', method: 'GET' },
-    'characteristic.update': { path: '/update', method: 'POST' },
-    'room.list': { path: '/rooms', method: 'GET' },
-    'system.version': { path: '/version', method: 'GET' },
-    'system.getFullInfo': { path: '/system-info', method: 'GET' },
-    'scenario.list': { path: '/scenarios', method: 'GET' },
-    'scenario.get': { path: '/scenarios/:id', method: 'GET' },
-    'scenario.create': { path: '/scenarios', method: 'POST' },
-    'scenario.update': { path: '/scenarios/:id', method: 'PUT' },
-    'scenario.delete': { path: '/scenarios/:id', method: 'DELETE' }
-  };
+  const restMethods = Schema.getRestMethods();
 
-  Object.entries(routeMappings).forEach(([methodName, route]) => {
-    const schema = Schema.getMethodSchema(methodName);
-    if (schema) {
-      console.log(`   app.${route.method.toLowerCase()}('${route.path}', schema, handler);`);
-      console.log(`     // ${schema.description}`);
-    }
+  restMethods.forEach(restMethod => {
+    const { httpMethod, path, schema } = restMethod;
+    console.log(`   app.${httpMethod.toLowerCase()}('${path}', schema, handler);`);
+    console.log(`     // ${schema.description}`);
   });
   console.log();
 

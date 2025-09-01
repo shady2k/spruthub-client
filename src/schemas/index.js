@@ -112,11 +112,32 @@ function getTypeDefinition(typeName) {
   return sprutHubSchema.definitions[typeName] || null;
 }
 
+/**
+ * Get all methods that have a REST mapping
+ * @returns {object[]} Array of objects with REST information
+ */
+function getRestMethods() {
+  const restMethods = [];
+  for (const methodName in sprutHubSchema.methods) {
+    const method = sprutHubSchema.methods[methodName];
+    if (method.rest) {
+      restMethods.push({
+        methodName: methodName,
+        httpMethod: method.rest.method,
+        path: method.rest.path,
+        schema: method
+      });
+    }
+  }
+  return restMethods;
+}
+
 module.exports = {
   schema: sprutHubSchema,
   getMethodSchema,
   getMethodsByCategory,
   getAvailableMethods,
   getCategories,
-  getTypeDefinition
+  getTypeDefinition,
+  getRestMethods
 };

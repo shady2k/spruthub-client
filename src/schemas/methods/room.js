@@ -7,6 +7,7 @@ const roomMethods = {
     description: 'List all rooms',
     category: 'room',
     method: 'room.list',
+    rest: { method: 'GET', path: '/rooms' },
     params: {
       type: 'object',
       properties: {
@@ -71,6 +72,7 @@ const roomMethods = {
     description: 'Get a specific room by ID',
     category: 'room',
     method: 'room.get',
+    rest: { method: 'GET', path: '/rooms/:id' },
     params: {
       type: 'object',
       properties: {

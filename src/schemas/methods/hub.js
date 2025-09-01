@@ -7,6 +7,7 @@ const hubMethods = {
     description: 'List all SprutHub devices/hubs in the system',
     category: 'hub',
     method: 'hub.list',
+    rest: { method: 'GET', path: '/hubs' },
     params: {
       type: 'object',
       properties: {
@@ -107,6 +108,7 @@ const hubMethods = {
     description: 'Set client information for the current connection',
     category: 'hub',
     method: 'server.clientInfo',
+    rest: { method: 'POST', path: '/server/client-info' },
     params: {
       type: 'object',
       properties: {
