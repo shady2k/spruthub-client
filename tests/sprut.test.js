@@ -929,25 +929,7 @@ describe("Sprut WebSocket Client", () => {
     expect(charInfo.characteristic.id).toBe(1);
   });
 
-  test("full system info retrieval", async () => {
-    const systemInfo = await sprut.getFullSystemInfo();
-    
-    expect(systemInfo).toHaveProperty('isSuccess', true);
-    expect(systemInfo).toHaveProperty('data');
-    expect(systemInfo.data).toHaveProperty('hubs');
-    expect(systemInfo.data).toHaveProperty('accessories');
-    expect(systemInfo.data).toHaveProperty('rooms');
-    expect(systemInfo.data).toHaveProperty('scenarios');
-    expect(systemInfo.data).toHaveProperty('controllableDevices');
-    expect(systemInfo.data).toHaveProperty('errors');
-    
-    expect(Array.isArray(systemInfo.data.hubs)).toBe(true);
-    expect(Array.isArray(systemInfo.data.accessories)).toBe(true);
-    expect(Array.isArray(systemInfo.data.rooms)).toBe(true);
-    expect(Array.isArray(systemInfo.data.scenarios)).toBe(true);
-    expect(Array.isArray(systemInfo.data.controllableDevices)).toBe(true);
-    expect(Array.isArray(systemInfo.data.errors)).toBe(true);
-  });
+  
 
   test("list scenarios command", async () => {
     const result = await sprut.listScenarios();

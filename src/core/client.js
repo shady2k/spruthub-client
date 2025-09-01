@@ -235,9 +235,7 @@ class Sprut {
     return await this.scenarioManager.deleteScenario(index);
   }
 
-  async getFullSystemInfo() {
-    return await this.systemManager.getFullSystemInfo();
-  }
+  
 
   // Schema methods
   getSchema() {

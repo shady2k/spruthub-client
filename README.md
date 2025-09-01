@@ -151,7 +151,7 @@ All methods return standardized response format: `{ isSuccess, code, message, da
 - `listScenarios()`: List all scenarios
 - `createScenario(scenarioData)`: Create new scenario
 - `updateScenario(id, scenarioData)`: Update existing scenario
-- `getFullSystemInfo()`: Get complete system information
+
 - `close()`: Close WebSocket connection
 
 #### Response Format
@@ -288,7 +288,7 @@ All methods return standardized response format: `{ isSuccess, code, message, da
 - `listScenarios()`: List all scenarios
 - `createScenario(scenarioData)`: Create new scenario
 - `updateScenario(id, scenarioData)`: Update existing scenario
-- `getFullSystemInfo()`: Get complete system information
+
 - `close()`: Close WebSocket connection
 
 #### Response Format
