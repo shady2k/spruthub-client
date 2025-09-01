@@ -1,4 +1,4 @@
-const { Schema, generators } = require('../src');
+const { Schema } = require('../src');
 
 describe('SprutHub Schema System', () => {
   describe('Schema Structure', () => {
@@ -148,50 +148,6 @@ describe('SprutHub Schema System', () => {
     });
   });
 
-  describe('Schema Generators', () => {
-    test('should generate JSON Schema', () => {
-      const jsonSchema = generators.generateJsonSchema(Schema.schema);
-      expect(jsonSchema).toBeDefined();
-      expect(jsonSchema.$schema).toBe('http://json-schema.org/draft-07/schema#');
-      expect(jsonSchema.title).toBe('SprutHub JSON-RPC API Schema');
-      expect(jsonSchema.definitions).toBeDefined();
-      expect(jsonSchema.properties).toBeDefined();
-      expect(jsonSchema.properties.request).toBeDefined();
-      expect(jsonSchema.properties.response).toBeDefined();
-    });
-
-    test('should generate method-specific JSON Schema', () => {
-      const methodSchema = Schema.getMethodSchema('accessory.list');
-      const jsonSchema = generators.generateMethodJsonSchema('accessory.list', methodSchema);
-      expect(jsonSchema).toBeDefined();
-      expect(jsonSchema.$schema).toBe('http://json-schema.org/draft-07/schema#');
-      expect(jsonSchema.title).toBe('accessory.list Method Schema');
-      expect(jsonSchema.definitions.request).toBeDefined();
-      expect(jsonSchema.definitions.response).toBeDefined();
-    });
-
-    test('should generate OpenAPI Schema', () => {
-      const openApiSchema = generators.generateOpenApiSchema(Schema.schema);
-      expect(openApiSchema).toBeDefined();
-      expect(openApiSchema.openapi).toBe('3.0.0');
-      expect(openApiSchema.info).toBeDefined();
-      expect(openApiSchema.info.title).toBe('SprutHub API');
-      expect(openApiSchema.paths).toBeDefined();
-      expect(openApiSchema.components).toBeDefined();
-      expect(openApiSchema.components.schemas).toBeDefined();
-      expect(openApiSchema.tags).toBeDefined();
-    });
-
-    test('should generate TypeScript definitions', () => {
-      const typescript = generators.generateTypeScriptDefinitions(Schema.schema);
-      expect(typescript).toBeDefined();
-      expect(typeof typescript).toBe('string');
-      expect(typescript).toContain('export interface');
-      expect(typescript).toContain('SprutHubClient');
-      expect(typescript).toContain('Accessory');
-      expect(typescript).toContain('Scenario');
-    });
-  });
 
   describe('Real-world Examples', () => {
     test('should have examples matching real device log patterns', () => {

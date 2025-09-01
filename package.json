@@ -1,7 +1,7 @@
 {
   "name": "spruthub-client",
-  "version": "1.2.4",
-  "description": "WebSocket client for communicating with Sprut smart home ecosystem",
+  "version": "1.2.5",
+  "description": "WebSocket client for communicating with Sprut.hub smart home ecosystem",
   "main": "src/index.js",
   "scripts": {
     "test": "jest",
@@ -24,8 +24,6 @@
     "json-rpc",
     "schema",
     "api-schema",
-    "openapi",
-    "typescript",
     "api-discovery"
   ],
   "author": "shady2k <shady2k@gmail.com>",

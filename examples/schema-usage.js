@@ -3,7 +3,7 @@
  * This shows how consuming applications can discover and use API methods
  */
 
-const { Schema, generators } = require('../src');
+const { Schema } = require('../src');
 
 async function demonstrateSchemaUsage() {
   console.log('=== SprutHub Schema System Demo ===\n');
@@ -57,36 +57,24 @@ async function demonstrateSchemaUsage() {
   console.log('  ', JSON.stringify(exampleRequest, null, 2));
   console.log();
 
-  // 6. Schema Generation for Different Formats
-  console.log('6. Schema Generation Examples:');
+  // 6. Raw Schema Data Access
+  console.log('6. Raw Schema Data Access:');
+  console.log('  Access to raw schema data for custom transformations:');
+  console.log(`    Schema has ${Object.keys(Schema.schema.definitions).length} type definitions`);
+  console.log(`    Schema has ${Object.keys(Schema.schema.methods).length} method definitions`);
+  console.log(`    Schema has ${Object.keys(Schema.schema.categories).length} categories`);
+  console.log();
   
-  // Generate JSON Schema for a specific method
-  const methodJsonSchema = generators.generateMethodJsonSchema('accessory.list', accessoryList);
-  console.log('  Generated JSON Schema for accessory.list (sample):');
-  console.log(`    Title: ${methodJsonSchema.title}`);
-  console.log(`    Has Request Definition: ${!!methodJsonSchema.definitions.request}`);
-  console.log(`    Has Response Definition: ${!!methodJsonSchema.definitions.response}`);
-  console.log();
-
-  // Generate OpenAPI specification
-  const openApiSpec = generators.generateOpenApiSchema(Schema.schema, {
-    title: 'My Smart Home API',
-    baseUrl: 'http://localhost:3000'
-  });
-  console.log('  Generated OpenAPI Spec (sample):');
-  console.log(`    API Title: ${openApiSpec.info.title}`);
-  console.log(`    OpenAPI Version: ${openApiSpec.openapi}`);
-  console.log(`    Available Paths: ${Object.keys(openApiSpec.paths).length}`);
-  console.log(`    Component Schemas: ${Object.keys(openApiSpec.components.schemas).length}`);
-  console.log();
-
-  // Generate TypeScript definitions
-  const typescriptDefs = generators.generateTypeScriptDefinitions(Schema.schema);
-  console.log('  Generated TypeScript definitions (preview):');
-  const preview = typescriptDefs.split('\n').slice(0, 10).join('\n');
-  console.log(`    Preview (first 10 lines):`);
-  console.log('    ' + preview.replace(/\n/g, '\n    '));
-  console.log('    ...');
+  console.log('  Example method schema structure:');
+  const sampleMethod = Schema.getMethodSchema('accessory.list');
+  console.log('    {');
+  console.log(`      description: "${sampleMethod.description}",`);
+  console.log(`      method: "${sampleMethod.method}",`);
+  console.log(`      category: "${sampleMethod.category}",`);
+  console.log(`      params: { ... },`);
+  console.log(`      result: { ... },`);
+  console.log(`      examples: [${sampleMethod.examples?.length || 0} examples]`);
+  console.log('    }');
   console.log();
 
   // 7. Integration with Client
@@ -122,8 +110,8 @@ async function demonstrateSchemaUsage() {
   console.log('- API discovery and documentation');
   console.log('- Request validation');
   console.log('- Framework-agnostic integration');
-  console.log('- Automatic code generation');
-  console.log('- Type-safe development');
+  console.log('- Raw schema data for custom transformations');
+  console.log('- Type-safe development through schema definitions');
 }
 
 // Run the demo

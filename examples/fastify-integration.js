@@ -1,34 +1,25 @@
 /**
- * Example showing how sprut-http-bridge could use the schema system
- * to automatically generate routes and API documentation
+ * Example showing how to integrate SprutHub schema system with Fastify
+ * to automatically discover methods and generate route configurations
  */
 
-const { Schema, generators } = require('../src');
+const { Schema } = require('../src');
 
-function generateBridgeConfig() {
-  console.log('=== SprutHub Bridge Integration Example ===\n');
+function generateFastifyIntegration() {
+  console.log('=== SprutHub Fastify Integration Example ===\n');
 
-  // Generate OpenAPI specification for the bridge
-  const openApiSpec = generators.generateOpenApiSchema(Schema.schema, {
-    title: 'SprutHub HTTP Bridge API',
-    version: '1.0.0',
-    description: 'RESTful HTTP bridge for SprutHub smart home system',
-    baseUrl: 'http://localhost:3000'
-  });
-
-  console.log('1. Generated OpenAPI Specification:');
-  console.log(`   Title: ${openApiSpec.info.title}`);
-  console.log(`   Version: ${openApiSpec.info.version}`);
-  console.log(`   Available Endpoints: ${Object.keys(openApiSpec.paths).length}`);
-  console.log('   Endpoints:');
-  Object.keys(openApiSpec.paths).forEach(path => {
-    const methods = Object.keys(openApiSpec.paths[path]);
-    console.log(`     ${methods[0].toUpperCase()} ${path}`);
+  // Show available methods for Fastify integration
+  console.log('1. Available Methods for Fastify:');
+  console.log(`   Total Methods: ${Schema.getAvailableMethods().length}`);
+  console.log('   Categories:');
+  Schema.getCategories().forEach(category => {
+    const methods = Schema.getMethodsByCategory(category);
+    console.log(`     ${category}: ${Object.keys(methods).length} methods`);
   });
   console.log();
 
-  // Generate schema files for use in sprut-http-bridge/schemas/
-  console.log('2. Schema Files for Bridge:');
+  // Generate schema files for Fastify routes
+  console.log('2. Fastify Route Schemas:');
   console.log('   These could be generated automatically:');
   console.log();
 
@@ -146,27 +137,27 @@ function generateBridgeConfig() {
   console.log('   ', JSON.stringify(exampleValidation.request.params, null, 2));
   console.log();
 
-  console.log('6. Benefits for Bridge Development:');
-  console.log('   ✓ Automatic schema generation');
-  console.log('   ✓ Consistent API documentation'); 
-  console.log('   ✓ Request validation');
-  console.log('   ✓ Type safety');
+  console.log('6. Benefits for Fastify Integration:');
+  console.log('   ✓ Schema-driven API discovery');
+  console.log('   ✓ Consistent request/response validation'); 
+  console.log('   ✓ Framework-agnostic integration');
+  console.log('   ✓ Type-safe development');
   console.log('   ✓ API change detection');
-  console.log('   ✓ Reduced manual maintenance');
+  console.log('   ✓ Reduced manual schema maintenance');
   console.log();
 
-  console.log('7. Future Enhancements:');
-  console.log('   - Schema versioning and compatibility checking');
-  console.log('   - Automatic test generation from examples');
-  console.log('   - Live API documentation updates');
-  console.log('   - Client SDK generation');
+  console.log('7. Integration Possibilities:');
+  console.log('   - Build custom schema generators in consuming apps');
+  console.log('   - Create framework-specific adapters');
+  console.log('   - Generate documentation from schema data');
+  console.log('   - Build validation middleware using raw schemas');
   console.log();
 
   console.log('=== Integration Example Complete ===');
 }
 
 if (require.main === module) {
-  generateBridgeConfig();
+  generateFastifyIntegration();
 }
 
-module.exports = { generateBridgeConfig };
+module.exports = { generateFastifyIntegration };
