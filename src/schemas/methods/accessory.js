@@ -39,8 +39,13 @@ const accessoryMethods = {
         code: { type: 'number' },
         message: { type: 'string' },
         data: {
-          type: 'array',
-          items: { $ref: '#/definitions/Accessory' }
+          type: 'object',
+          properties: {
+            accessories: {
+              type: 'array',
+              items: { $ref: '#/definitions/Accessory' }
+            }
+          }
         }
       }
     },

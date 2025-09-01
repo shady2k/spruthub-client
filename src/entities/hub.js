@@ -48,21 +48,12 @@ class HubManager {
         }
       });
 
-      this.log.info(clientResult, "Client info set successfully");
-
-      if (clientResult.error) {
-        return {
-          isSuccess: false,
-          ...clientResult.error,
-        };
-      }
-
-      return {
-        isSuccess: true,
-        code: 0,
-        message: "Success",
-        data: clientResult.result
-      };
+      return Helpers.handleApiResponse(
+        clientResult,
+        [],
+        this.log,
+        "Client info set successfully"
+      );
     } catch (error) {
       this.log.error("Error setting client info:", error);
       throw error;

@@ -22,7 +22,8 @@ const commonTypes = {
     required: ['id', 'jsonrpc']
   },
 
-  // Standard API response structure
+  // Standard client API response structure
+  // This is what the client library returns to consumers
   ApiResponse: {
     type: 'object',
     properties: {

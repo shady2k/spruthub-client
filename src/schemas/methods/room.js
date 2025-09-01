@@ -33,17 +33,22 @@ const roomMethods = {
         code: { type: 'number' },
         message: { type: 'string' },
         data: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              id: { type: 'number' },
-              name: { type: 'string' },
-              order: { type: 'number' },
-              type: { type: 'string' },
-              visible: { type: 'boolean' }
-            },
-            required: ['id', 'name']
+          type: 'object',
+          properties: {
+            rooms: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: { type: 'number' },
+                  name: { type: 'string' },
+                  order: { type: 'number' },
+                  type: { type: 'string' },
+                  visible: { type: 'boolean' }
+                },
+                required: ['id', 'name']
+              }
+            }
           }
         }
       }

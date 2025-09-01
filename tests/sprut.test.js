@@ -900,19 +900,21 @@ describe("Sprut WebSocket Client", () => {
   test("full system info retrieval", async () => {
     const systemInfo = await sprut.getFullSystemInfo();
     
-    expect(systemInfo).toHaveProperty('hubs');
-    expect(systemInfo).toHaveProperty('accessories');
-    expect(systemInfo).toHaveProperty('rooms');
-    expect(systemInfo).toHaveProperty('scenarios');
-    expect(systemInfo).toHaveProperty('controllableDevices');
-    expect(systemInfo).toHaveProperty('errors');
+    expect(systemInfo).toHaveProperty('isSuccess', true);
+    expect(systemInfo).toHaveProperty('data');
+    expect(systemInfo.data).toHaveProperty('hubs');
+    expect(systemInfo.data).toHaveProperty('accessories');
+    expect(systemInfo.data).toHaveProperty('rooms');
+    expect(systemInfo.data).toHaveProperty('scenarios');
+    expect(systemInfo.data).toHaveProperty('controllableDevices');
+    expect(systemInfo.data).toHaveProperty('errors');
     
-    expect(Array.isArray(systemInfo.hubs)).toBe(true);
-    expect(Array.isArray(systemInfo.accessories)).toBe(true);
-    expect(Array.isArray(systemInfo.rooms)).toBe(true);
-    expect(Array.isArray(systemInfo.scenarios)).toBe(true);
-    expect(Array.isArray(systemInfo.controllableDevices)).toBe(true);
-    expect(Array.isArray(systemInfo.errors)).toBe(true);
+    expect(Array.isArray(systemInfo.data.hubs)).toBe(true);
+    expect(Array.isArray(systemInfo.data.accessories)).toBe(true);
+    expect(Array.isArray(systemInfo.data.rooms)).toBe(true);
+    expect(Array.isArray(systemInfo.data.scenarios)).toBe(true);
+    expect(Array.isArray(systemInfo.data.controllableDevices)).toBe(true);
+    expect(Array.isArray(systemInfo.data.errors)).toBe(true);
   });
 
   test("list scenarios command", async () => {
@@ -955,7 +957,7 @@ describe("Sprut WebSocket Client", () => {
     expect(result).toMatchObject({
       isSuccess: true,
       code: 0,
-      message: "Scenario created successfully"
+      message: "Success"
     });
     expect(result.data).toMatchObject({
       index: "3",
@@ -982,7 +984,7 @@ describe("Sprut WebSocket Client", () => {
     expect(result).toMatchObject({
       isSuccess: true,
       code: 0,
-      message: "Scenario updated successfully"
+      message: "Success"
     });
     expect(result.data).toMatchObject({
       index: "3",

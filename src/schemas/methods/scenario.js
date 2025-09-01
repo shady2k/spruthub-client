@@ -33,8 +33,13 @@ const scenarioMethods = {
         code: { type: 'number' },
         message: { type: 'string' },
         data: {
-          type: 'array',
-          items: { $ref: '#/definitions/Scenario' }
+          type: 'object',
+          properties: {
+            scenarios: {
+              type: 'array',
+              items: { $ref: '#/definitions/Scenario' }
+            }
+          }
         }
       }
     },

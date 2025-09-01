@@ -68,24 +68,12 @@ class DeviceManager {
         }
       });
 
-      this.log.info(updateResult, "Command executed successfully");
-
-      if (updateResult.error) {
-        return {
-          isSuccess: false,
-          ...updateResult.error,
-        };
-      }
-
-      if (updateResult.result) {
-        return {
-          isSuccess: true,
-          code: 0,
-          message: "Success",
-        };
-      }
-
-      return updateResult;
+      return Helpers.handleApiResponse(
+        updateResult,
+        [],
+        this.log,
+        "Command executed successfully"
+      );
     } catch (error) {
       this.log.error("Error executing command:", error);
       throw error;

@@ -33,50 +33,55 @@ const hubMethods = {
         code: { type: 'number' },
         message: { type: 'string' },
         data: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              serial: { type: 'string' },
-              name: { type: 'string' },
-              manufacturer: { type: 'string' },
-              model: { type: 'string' },
-              owner: { type: 'string' },
-              lang: { type: 'string' },
-              lastSeen: { type: 'number' },
-              online: { type: 'boolean' },
-              discovery: { type: 'boolean' },
-              version: {
+          type: 'object',
+          properties: {
+            hubs: {
+              type: 'array',
+              items: {
                 type: 'object',
                 properties: {
-                  current: {
-                    type: 'object',
-                    properties: {
-                      revision: { type: 'number' },
-                      template: { type: 'number' },
-                      version: { type: 'string' },
-                      hardware: { type: 'string' }
-                    }
-                  },
-                  upgrade: {
-                    type: 'object',
-                    properties: {
-                      revision: { type: 'number' },
-                      template: { type: 'number' },
-                      version: { type: 'string' }
-                    }
-                  },
-                  branch: { type: 'string' }
-                }
-              },
-              platform: {
-                type: 'object',
-                properties: {
+                  serial: { type: 'string' },
+                  name: { type: 'string' },
                   manufacturer: { type: 'string' },
                   model: { type: 'string' },
-                  serial: { type: 'string' },
-                  mac: { type: 'string' },
-                  jdk: { type: 'string' }
+                  owner: { type: 'string' },
+                  lang: { type: 'string' },
+                  lastSeen: { type: 'number' },
+                  online: { type: 'boolean' },
+                  discovery: { type: 'boolean' },
+                  version: {
+                    type: 'object',
+                    properties: {
+                      current: {
+                        type: 'object',
+                        properties: {
+                          revision: { type: 'number' },
+                          template: { type: 'number' },
+                          version: { type: 'string' },
+                          hardware: { type: 'string' }
+                        }
+                      },
+                      upgrade: {
+                        type: 'object',
+                        properties: {
+                          revision: { type: 'number' },
+                          template: { type: 'number' },
+                          version: { type: 'string' }
+                        }
+                      },
+                      branch: { type: 'string' }
+                    }
+                  },
+                  platform: {
+                    type: 'object',
+                    properties: {
+                      manufacturer: { type: 'string' },
+                      model: { type: 'string' },
+                      serial: { type: 'string' },
+                      mac: { type: 'string' },
+                      jdk: { type: 'string' }
+                    }
+                  }
                 }
               }
             }
@@ -133,11 +138,12 @@ const hubMethods = {
     result: {
       type: 'object',
       properties: {
-        server: {
+        isSuccess: { type: 'boolean' },
+        code: { type: 'number' },
+        message: { type: 'string' },
+        data: {
           type: 'object',
-          properties: {
-            clientInfo: { type: 'object' }
-          }
+          properties: {}
         }
       }
     },

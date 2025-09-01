@@ -183,7 +183,7 @@ describe('SprutHub Schema System', () => {
       const accessoryListMethod = Schema.getMethodSchema('accessory.list');
 
       // Check that result references the correct type
-      expect(accessoryListMethod.result.properties.data.items.$ref).toBe('#/definitions/Accessory');
+      expect(accessoryListMethod.result.properties.data.properties.accessories.items.$ref).toBe('#/definitions/Accessory');
 
       // Verify type has required properties
       expect(accessoryType.properties.id).toBeDefined();

@@ -15,28 +15,36 @@ const systemMethods = {
     result: {
       type: 'object',
       properties: {
-        hubs: {
-          type: 'array',
-          description: 'All hubs in the system'
-        },
-        accessories: {
-          type: 'array',
-          description: 'All accessories/devices with full details',
-          items: { $ref: '#/definitions/Accessory' }
-        },
-        rooms: {
-          type: 'array',
-          description: 'All rooms'
-        },
-        scenarios: {
-          type: 'array',
-          description: 'All scenarios',
-          items: { $ref: '#/definitions/Scenario' }
-        },
-        controllableDevices: {
-          type: 'array',
-          description: 'Filtered list of controllable characteristics',
-          items: { $ref: '#/definitions/ControllableCharacteristic' }
+        isSuccess: { type: 'boolean' },
+        code: { type: 'number' },
+        message: { type: 'string' },
+        data: {
+          type: 'object',
+          properties: {
+            hubs: {
+              type: 'array',
+              description: 'All hubs in the system'
+            },
+            accessories: {
+              type: 'array',
+              description: 'All accessories/devices with full details',
+              items: { $ref: '#/definitions/Accessory' }
+            },
+            rooms: {
+              type: 'array',
+              description: 'All rooms'
+            },
+            scenarios: {
+              type: 'array',
+              description: 'All scenarios',
+              items: { $ref: '#/definitions/Scenario' }
+            },
+            controllableDevices: {
+              type: 'array',
+              description: 'Filtered list of controllable characteristics',
+              items: { $ref: '#/definitions/ControllableCharacteristic' }
+            }
+          }
         }
       }
     },
@@ -62,10 +70,18 @@ const systemMethods = {
     result: {
       type: 'object',
       properties: {
-        version: { type: 'string' },
-        revision: { type: 'number' },
-        build: { type: 'string' },
-        platform: { type: 'string' }
+        isSuccess: { type: 'boolean' },
+        code: { type: 'number' },
+        message: { type: 'string' },
+        data: {
+          type: 'object',
+          properties: {
+            version: { type: 'string' },
+            revision: { type: 'number' },
+            build: { type: 'string' },
+            platform: { type: 'string' }
+          }
+        }
       }
     },
     examples: [

@@ -72,30 +72,12 @@ class ScenarioManager {
         },
       });
 
-      this.log.info(createResult, 'Scenario created successfully');
-
-      if (createResult.error) {
-        return {
-          isSuccess: false,
-          ...createResult.error,
-        };
-      }
-
-      if (createResult.result) {
-        // Handle both formats: direct result or nested scenario.create result
-        if (createResult.result.scenario && createResult.result.scenario.create) {
-          return {
-            isSuccess: true,
-            code: 0,
-            message: 'Scenario created successfully',
-            data: createResult.result.scenario.create,
-          };
-        } else {
-          return createResult.result;
-        }
-      }
-
-      return createResult;
+      return Helpers.handleApiResponse(
+        createResult,
+        ["scenario", "create"],
+        this.log,
+        "Scenario created successfully"
+      );
     } catch (error) {
       this.log.error('Error creating scenario:', error);
       throw error;
@@ -124,30 +106,12 @@ class ScenarioManager {
         },
       });
 
-      this.log.info(updateResult, 'Scenario updated successfully');
-
-      if (updateResult.error) {
-        return {
-          isSuccess: false,
-          ...updateResult.error,
-        };
-      }
-
-      if (updateResult.result) {
-        // Handle both formats: direct result or nested scenario.update result
-        if (updateResult.result.scenario && updateResult.result.scenario.update) {
-          return {
-            isSuccess: true,
-            code: 0,
-            message: 'Scenario updated successfully',
-            data: updateResult.result.scenario.update,
-          };
-        } else {
-          return updateResult.result;
-        }
-      }
-
-      return updateResult;
+      return Helpers.handleApiResponse(
+        updateResult,
+        ["scenario", "update"],
+        this.log,
+        "Scenario updated successfully"
+      );
     } catch (error) {
       this.log.error('Error updating scenario:', error);
       throw error;
