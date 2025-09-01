@@ -5,7 +5,6 @@ const DeviceManager = require('../entities/device');
 const HubManager = require('../entities/hub');
 const RoomManager = require('../entities/room');
 const ScenarioManager = require('../entities/scenario');
-const SystemManager = require('../entities/system');
 const SchemaManager = require('../schemas');
 
 class Sprut {
@@ -59,12 +58,6 @@ class Sprut {
       logger
     );
 
-    this.systemManager = new SystemManager(
-      this.hubManager,
-      this.deviceManager,
-      this.roomManager,
-      this.scenarioManager
-    );
 
     // Start connection
     this.wsManager.connect();
@@ -88,15 +81,16 @@ class Sprut {
   }
 
   handleConnection() {
-    // Additional connection logic can be added here
+    this.log.info("WebSocket connection established");
   }
 
   handleDisconnection() {
-    // Additional disconnection logic can be added here
+    this.log.info("WebSocket connection closed");
+    this.authManager.clearToken();
   }
 
-  handleError(_error) {
-    // Additional error handling can be added here
+  handleError(error) {
+    this.log.error("WebSocket error occurred:", error);
   }
 
   async connected() {
@@ -209,6 +203,10 @@ class Sprut {
 
   async listRooms() {
     return await this.roomManager.listRooms();
+  }
+
+  async getRoom(roomId) {
+    return await this.roomManager.getRoom(roomId);
   }
 
   getDevicesByRoom(accessories, roomId) {

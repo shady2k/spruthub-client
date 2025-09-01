@@ -1,3 +1,5 @@
+const Helpers = require('../utils/helpers');
+
 class AuthManager {
   constructor(sprutEmail, sprutPassword, logger, callMethod) {
     this.sprutEmail = sprutEmail;
@@ -23,12 +25,6 @@ class AuthManager {
     this.token = null;
   }
 
-  _getNestedProperty(obj, path, defaultValue) {
-    return path.reduce(
-      (acc, key) => (acc && acc[key] ? acc[key] : defaultValue),
-      obj
-    );
-  }
 
   async authenticate() {
     return new Promise((resolve, reject) => {
@@ -42,13 +38,13 @@ class AuthManager {
       })
         .then((authCall) => {
           if (
-            this._getNestedProperty(authCall, [
+            Helpers.getNestedProperty(authCall, [
               "result",
               "account",
               "auth",
               "status",
             ]) !== "ACCOUNT_RESPONSE_SUCCESS" ||
-            this._getNestedProperty(authCall, [
+            Helpers.getNestedProperty(authCall, [
               "result",
               "account",
               "auth",
@@ -68,7 +64,7 @@ class AuthManager {
             })
               .then((emailCall) => {
                 if (
-                  this._getNestedProperty(emailCall, [
+                  Helpers.getNestedProperty(emailCall, [
                     "result",
                     "account",
                     "answer",
@@ -88,7 +84,7 @@ class AuthManager {
                   })
                     .then((passwordCall) => {
                       if (
-                        this._getNestedProperty(passwordCall, [
+                        Helpers.getNestedProperty(passwordCall, [
                           "result",
                           "account",
                           "answer",

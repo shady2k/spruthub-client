@@ -29,8 +29,7 @@ function generateFastifyIntegration() {
     'update': Schema.getMethodSchema('characteristic.update'), 
     'hubs': Schema.getMethodSchema('hub.list'),
     'rooms': Schema.getMethodSchema('room.list'),
-    'version': Schema.getMethodSchema('system.version'),
-    'systemInfo': Schema.getMethodSchema('system.getFullInfo'),
+    'version': Schema.getMethodSchema('server.version'),
     'scenarios/get': Schema.getMethodSchema('scenario.get')
   };
 

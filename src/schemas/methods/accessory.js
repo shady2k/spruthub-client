@@ -148,7 +148,7 @@ const accessoryMethods = {
           params: {
             characteristic: {
               update: {
-                aId: 258,
+                aId: 310,
                 sId: 13,
                 cId: 15,
                 control: {

@@ -162,7 +162,7 @@ const scenarioMethods = {
                 },
                 type: { 
                   type: 'string',
-                  enum: ['BLOCK', 'CLASSIC'],
+                  enum: ['BLOCK', 'LOGIC', 'GLOBAL'],
                   description: 'Scenario type',
                   default: 'BLOCK'
                 },
@@ -213,15 +213,15 @@ const scenarioMethods = {
     },
     examples: [
       {
-        description: 'Create a minimal block scenario',
+        description: 'Create a block scenario with logging',
         request: {
           params: {
             scenario: {
               create: {
-                name: "",
-                desc: "",
+                name: "Test Scenario",
+                desc: "A test scenario for demonstration",
                 type: "BLOCK",
-                active: false,
+                active: true,
                 onStart: true,
                 sync: false,
                 data: ""
@@ -264,7 +264,7 @@ const scenarioMethods = {
                 },
                 type: { 
                   type: 'string',
-                  enum: ['BLOCK', 'CLASSIC'],
+                  enum: ['BLOCK', 'LOGIC', 'GLOBAL'],
                   description: 'Scenario type',
                   default: 'BLOCK'
                 },
@@ -285,7 +285,7 @@ const scenarioMethods = {
                 },
                 data: { 
                   type: 'string',
-                  description: 'Updated scenario data as JSON string (e.g., "{\"blockId\":0,\"targets\":[]}")',
+                  description: 'Updated scenario data as JSON string (e.g., "{\\"blockId\\":0,\\"targets\\":[]}")',
                   minLength: 0
                 }
               },
@@ -321,16 +321,13 @@ const scenarioMethods = {
     },
     examples: [
       {
-        description: 'Update scenario with name and code block',
+        description: 'Update scenario data with code block',
         request: {
           params: {
             scenario: {
               update: {
                 index: "95",
-                name: "Test Scenario",
-                desc: "A test scenario with logging",
-                active: true,
-                data: '{"blockId":0,"targets":[{"type":"code","code":"log.info(\\"test\\")\\n"}]}'
+                data: '{"blockId":0,"targets":[{"type":"code","code":"log.info(\\"Hello World\\")\\n"}]}'
               }
             }
           }
@@ -354,8 +351,11 @@ const scenarioMethods = {
               type: 'object',
               properties: {
                 index: { 
-                  type: 'number',
-                  description: 'Scenario index/ID to delete'
+                  oneOf: [
+                    { type: 'number' },
+                    { type: 'string' }
+                  ],
+                  description: 'Scenario index/ID to delete (can be numeric or string)'
                 }
               },
               required: ['index'],
@@ -395,7 +395,7 @@ const scenarioMethods = {
           params: {
             scenario: {
               delete: {
-                index: 1
+                index: 95
               }
             }
           }
@@ -407,7 +407,7 @@ const scenarioMethods = {
           params: {
             scenario: {
               delete: {
-                index: 'scenario-id'
+                index: "95"
               }
             }
           }

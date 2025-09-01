@@ -12,7 +12,7 @@ const scenarioTypes = {
       desc: { type: 'string' },
       type: { 
         type: 'string',
-        enum: ['BLOCK', 'CLASSIC'],
+        enum: ['BLOCK', 'LOGIC', 'GLOBAL'],
         default: 'BLOCK'
       },
       active: { type: 'boolean' },
@@ -58,7 +58,7 @@ const scenarioTypes = {
       },
       type: { 
         type: 'string',
-        enum: ['BLOCK', 'CLASSIC'],
+        enum: ['BLOCK', 'LOGIC', 'GLOBAL'],
         default: 'BLOCK'
       },
       active: { 
