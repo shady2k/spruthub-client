@@ -6,6 +6,7 @@ const HubManager = require('../entities/hub');
 const RoomManager = require('../entities/room');
 const ScenarioManager = require('../entities/scenario');
 const SchemaManager = require('../schemas');
+const enhancedMethods = require('../enhanced');
 
 class Sprut {
   constructor(opts) {
@@ -14,6 +15,7 @@ class Sprut {
     this.serial = serial;
     this.idCounter = 1;
     this.queue = new Queue();
+    this.enhancedMethods = enhancedMethods;
 
     if (!wsUrl || !sprutEmail || !sprutPassword || !serial) {
       throw new Error(
@@ -268,6 +270,16 @@ class Sprut {
     const methodSchema = this.getMethodSchema(methodName);
     if (!methodSchema) {
       throw new Error(`Method ${methodName} not found in schema`);
+    }
+
+    // Check if it's an enhanced method
+    if (methodSchema.enhanced) {
+      const implementation = this.enhancedMethods[methodName];
+      if (!implementation) {
+        throw new Error(`Implementation for enhanced method ${methodName} not found`);
+      }
+      // The implementation receives the client instance and params
+      return implementation(this, requestData);
     }
 
     // Build parameters dynamically from schema structure

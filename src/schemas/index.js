@@ -11,6 +11,7 @@ const accessoryMethods = require('./methods/accessory');
 const scenarioMethods = require('./methods/scenario');
 const roomMethods = require('./methods/room');
 const systemMethods = require('./methods/system');
+const accessoryEnhancedMethods = require('./enhanced/accessory');
 
 /**
  * Complete schema definition for SprutHub JSON-RPC API
@@ -58,7 +59,8 @@ const sprutHubSchema = {
     ...accessoryMethods,
     ...scenarioMethods,
     ...roomMethods,
-    ...systemMethods
+    ...systemMethods,
+    ...accessoryEnhancedMethods
   }
 };
 
