@@ -52,7 +52,7 @@ const commonTypes = {
 
   // Control value structure
   ControlValue: {
-    oneOf: [
+    anyOf: [
       { 
         type: 'object', 
         properties: { boolValue: { type: 'boolean' } },

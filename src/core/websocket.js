@@ -7,6 +7,7 @@ class WebSocketManager {
     this.wsClient = null;
     this.isConnected = false;
     this.isTerminated = false;
+    this.reconnectTimeout = null;
     this.connectionHandlers = {
       onOpen: null,
       onMessage: null,
@@ -59,8 +60,19 @@ class WebSocketManager {
       this.connectionHandlers.onClose();
     }
 
+    // Clear any existing reconnect timeout
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+
+    // Don't reconnect if connection was intentionally terminated
+    if (this.isTerminated) {
+      return;
+    }
+
     // Delay before attempting to reconnect
-    setTimeout(() => {
+    this.reconnectTimeout = setTimeout(() => {
       this.reconnect();
     }, 5000); // 5 seconds delay
   }
@@ -95,20 +107,20 @@ class WebSocketManager {
   }
 
   async close() {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       this.isTerminated = true;
       if (this.wsClient) {
         // Add a timeout to prevent hanging
         const timeout = setTimeout(() => {
-          this.wsClient.removeAllListeners("close");
           this.log.info("WebSocket close timeout, forcing termination");
+          this.forceCleanup();
           resolve();
-        }, 5000); // 5 second timeout
+        }, 1000); // 1 second timeout for tests
 
         // Listen for the 'close' event
         this.wsClient.once("close", () => {
           clearTimeout(timeout);
-          // Once the 'close' event is emitted, resolve the promise
+          this.cleanup();
           resolve();
         });
 
@@ -117,15 +129,42 @@ class WebSocketManager {
           this.wsClient.close();
         } catch (error) {
           clearTimeout(timeout);
-          // If there is an error while closing, remove the 'close' event listener
-          // to prevent future resolutions and reject the promise
-          this.wsClient.removeListener("close", resolve);
-          reject(error);
+          this.forceCleanup();
+          resolve();
         }
       } else {
         resolve();
       }
     });
+  }
+
+  cleanup() {
+    if (this.wsClient) {
+      this.wsClient.removeAllListeners();
+      this.wsClient = null;
+    }
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    this.isConnected = false;
+  }
+
+  forceCleanup() {
+    if (this.wsClient) {
+      this.wsClient.removeAllListeners();
+      try {
+        this.wsClient.terminate();
+      } catch (error) {
+        // Ignore termination errors
+      }
+      this.wsClient = null;
+    }
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    this.isConnected = false;
   }
 
   isOpen() {

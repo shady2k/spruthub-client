@@ -7,15 +7,36 @@ const RoomManager = require('../entities/room');
 const ScenarioManager = require('../entities/scenario');
 const SchemaManager = require('../schemas');
 const enhancedMethods = require('../enhanced');
+const ParameterValidator = require('../utils/parameterValidator');
 
 class Sprut {
   constructor(opts) {
-    const { wsUrl, sprutEmail, sprutPassword, serial, logger } = opts;
+    const { 
+      wsUrl, 
+      sprutEmail, 
+      sprutPassword, 
+      serial, 
+      logger,
+      // Validation options
+      enableParameterValidation = true,
+      strictValidation = false,
+      // Timeout options
+      defaultTimeout = 5000
+    } = opts;
+    
     this.log = logger;
     this.serial = serial;
     this.idCounter = 1;
     this.queue = new Queue();
     this.enhancedMethods = enhancedMethods;
+    
+    // Validation configuration
+    this.enableParameterValidation = enableParameterValidation;
+    this.strictValidation = strictValidation;
+    this.defaultTimeout = defaultTimeout;
+    
+    // Initialize parameter validator
+    this.parameterValidator = new ParameterValidator(logger);
 
     if (!wsUrl || !sprutEmail || !sprutPassword || !serial) {
       throw new Error(
@@ -117,7 +138,7 @@ class Sprut {
     await this.authManager.ensureAuthenticated();
   }
 
-  async call(json) {
+  async call(json, timeout = null) {
     return new Promise((resolve, reject) => {
       const id = this.generateNextId();
       const payload = {
@@ -127,6 +148,9 @@ class Sprut {
         token: this.authManager.getToken(),
         serial: this.serial,
       };
+
+      // Use provided timeout or default
+      const requestTimeout = timeout || this.defaultTimeout;
 
       if (this.wsManager.isOpen()) {
         this.wsManager.send(JSON.stringify(payload))
@@ -138,7 +162,7 @@ class Sprut {
               } else {
                 resolve(response);
               }
-            });
+            }, requestTimeout);
           })
           .catch(reject);
       } else {
@@ -283,10 +307,37 @@ class Sprut {
     }
 
     // Build parameters dynamically from schema structure
-    const params = this.buildParamsFromSchema(methodSchema.params, requestData);
+    let params = this.buildParamsFromSchema(methodSchema.params, requestData);
+
+    // Parameter validation if enabled
+    if (this.enableParameterValidation) {
+      const validation = this.parameterValidator.validateAndCoerce(methodSchema, params);
+      
+      if (!validation.isValid) {
+        const errorMessage = this.parameterValidator.formatValidationErrors(validation.errors);
+        this.log.warn(`Parameter validation failed for ${methodName}:`, errorMessage);
+        
+        if (this.strictValidation) {
+          return {
+            isSuccess: false,
+            code: -32602,
+            message: `Parameter validation failed: ${errorMessage}`,
+            data: { validationErrors: validation.errors }
+          };
+        }
+      }
+      
+      // Use coerced parameters even if validation had warnings
+      params = validation.coercedData;
+      
+      if (validation.errors.length > 0 && !this.strictValidation) {
+        this.log.debug(`Parameter coercion applied for ${methodName}:`, validation.errors);
+      }
+    }
 
     try {
-      const result = await this.call(params);
+      const timeout = this.defaultTimeout;
+      const result = await this.call(params, timeout);
       
       // Wrap JSON-RPC response in standardized format
       if (result.error) {

@@ -1,4 +1,4 @@
-const { Queue } = require("../src/index");
+const Queue = require("../src/queue");
 
 describe("Queue", () => {
   let queue;
@@ -42,6 +42,32 @@ describe("Queue", () => {
     }, 150);
   });
 
+  test("invokes callback with timeout error when timeout occurs", (done) => {
+    const callback = jest.fn();
+    const timeout = 100;
+    const requestId = "timeout-test";
+    
+    queue.add(requestId, callback, timeout);
+    
+    setTimeout(() => {
+      // Verify callback was called with timeout error
+      expect(callback).toHaveBeenCalledWith({
+        error: {
+          code: -32603,
+          message: expect.stringContaining(`Request timeout after ${timeout}ms`),
+          data: { timeout, requestId }
+        }
+      });
+      
+      // Verify the error message mentions malformed requests
+      const [callArgs] = callback.mock.calls[0];
+      expect(callArgs.error.message).toContain('malformed request');
+      expect(callArgs.error.message).toContain('silently rejected');
+      
+      done();
+    }, 150);
+  });
+
   test("clears existing timeout when adding same id", () => {
     const callback1 = jest.fn();
     const callback2 = jest.fn();
@@ -71,7 +97,7 @@ describe("Queue", () => {
 
   test("uses default timeout when not specified", () => {
     const callback = jest.fn();
-    queue.add("test-id", callback); // Uses default 30000ms timeout
+    queue.add("test-id", callback); // Uses default 5000ms timeout (updated from 30000)
     
     expect(queue.timeouts.has("test-id")).toBe(true);
   });

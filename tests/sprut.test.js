@@ -598,14 +598,22 @@ describe("Sprut WebSocket Client", () => {
     await sprut.connected();
   });
 
-  afterAll((done) => {
-    sprut.close().then(() => {
+  afterAll(async () => {
+    if (sprut) {
+      await sprut.close();
+    }
+    if (server) {
+      // Close all client connections first
       for (const ws of server.clients) {
-        ws.close();
+        ws.terminate();
       }
-      server.close();
-      setTimeout(() => done(), 1000);
-    });
+      // Close server and wait for it to fully close
+      await new Promise((resolve) => {
+        server.close(resolve);
+      });
+    }
+    // Give extra time for cleanup
+    await new Promise(resolve => setTimeout(resolve, 500));
   });
 
   test("handles WebSocket connection", async () => {
@@ -1044,5 +1052,180 @@ describe("Sprut WebSocket Client", () => {
     await expect(
       sprut.updateScenario("1", "")
     ).rejects.toThrow("Scenario data must be provided");
+  });
+
+  describe('callMethod with parameter validation', () => {
+    test('should validate and coerce parameters before making request', async () => {
+      const client = new Sprut({
+        wsUrl: 'ws://localhost:1236', // Use the same mock server
+        sprutEmail: 'test@test.com',
+        sprutPassword: 'testpass',
+        serial: 'test123',
+        enableParameterValidation: true,
+        strictValidation: false,
+        logger: {
+          info: jest.fn(),
+          debug: jest.fn(),
+          error: jest.fn(),
+        },
+      });
+
+      // Wait for connection
+      await client.connected();
+
+      // Mock logger to avoid errors
+      client.log = {
+        warn: jest.fn(),
+        debug: jest.fn(),
+        error: jest.fn(),
+        info: jest.fn()
+      };
+
+      // Mock the schema to return scenario.get schema
+      client.getMethodSchema = jest.fn().mockReturnValue({
+        params: {
+          type: 'object',
+          properties: {
+            scenario: {
+              type: 'object',
+              properties: {
+                get: {
+                  type: 'object',
+                  properties: {
+                    index: { type: 'string' },
+                    expand: { type: 'string' }
+                  },
+                  required: ['index']
+                }
+              },
+              required: ['get']
+            }
+          },
+          required: ['scenario']
+        }
+      });
+
+      client.buildParamsFromSchema = jest.fn().mockReturnValue({
+        scenario: {
+          get: {
+            index: 100, // This number should be coerced to string
+            expand: 'data'
+          }
+        }
+      });
+
+      // Mock ensureConnectionAndAuthentication
+      client.ensureConnectionAndAuthentication = jest.fn().mockResolvedValue();
+      
+      // Mock call method to verify coerced parameters
+      client.call = jest.fn().mockImplementation((params) => {
+        // Verify the index was coerced to string
+        expect(params.scenario.get.index).toBe('100');
+        expect(typeof params.scenario.get.index).toBe('string');
+        
+        return Promise.resolve({
+          result: {
+            scenario: {
+              get: {
+                status: 'success',
+                data: { index: '100', name: 'Test Scenario' }
+              }
+            }
+          }
+        });
+      });
+
+      // Test parameter validation and coercion
+      const result = await client.callMethod('scenario.get', {
+        index: 100, // Number should be coerced to string
+        expand: 'data'
+      });
+      
+      expect(result.isSuccess).toBe(true);
+      expect(client.call).toHaveBeenCalled();
+      // Verify that the ParameterValidator was used (coercion happened)
+      const callArgs = client.call.mock.calls[0][0];
+      expect(callArgs.scenario.get.index).toBe('100');
+      expect(typeof callArgs.scenario.get.index).toBe('string');
+      
+      // Clean up the client
+      await client.close();
+    });
+
+    test('should fail validation in strict mode for invalid parameters', async () => {
+      const client = new Sprut({
+        wsUrl: 'ws://localhost:1236', // Use the same mock server
+        sprutEmail: 'test@test.com', 
+        sprutPassword: 'testpass',
+        serial: 'test123',
+        enableParameterValidation: true,
+        strictValidation: true,
+        logger: {
+          info: jest.fn(),
+          debug: jest.fn(),
+          error: jest.fn(),
+        },
+      });
+
+      // Wait for connection
+      await client.connected();
+
+      // Mock logger to avoid errors
+      client.log = {
+        warn: jest.fn(),
+        debug: jest.fn(),
+        error: jest.fn(),
+        info: jest.fn()
+      };
+
+      // Mock the schema and validator to avoid connection
+      client.getMethodSchema = jest.fn().mockReturnValue({
+        params: {
+          type: 'object',
+          properties: {
+            scenario: {
+              type: 'object',
+              properties: {
+                get: {
+                  type: 'object',
+                  properties: {
+                    index: { type: 'string' }
+                  },
+                  required: ['index']
+                }
+              },
+              required: ['get']
+            }
+          },
+          required: ['scenario']
+        }
+      });
+
+      client.buildParamsFromSchema = jest.fn().mockReturnValue({
+        scenario: {
+          get: {
+            index: { invalid: 'object' },
+            expand: 'data'
+          }
+        }
+      });
+
+      // Mock ensureConnectionAndAuthentication to avoid connection requirement
+      client.ensureConnectionAndAuthentication = jest.fn().mockResolvedValue();
+
+      // Test with completely invalid parameter that cannot be coerced
+      const result = await client.callMethod('scenario.get', {
+        index: { invalid: 'object' }, // Object cannot be coerced to string  
+        expand: 'data'
+      });
+      
+      expect(result.isSuccess).toBe(false);
+      expect(result.code).toBe(-32602);
+      expect(result.message).toContain('Parameter validation failed');
+      expect(result.data.validationErrors).toBeDefined();
+      
+      // Clean up the client
+      await client.close();
+    });
   });
 });

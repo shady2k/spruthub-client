@@ -4,12 +4,24 @@ class Queue {
     this.timeouts = new Map();
   }
 
-  add(id, callback, timeout = 30000) {
+  add(id, callback, timeout = 5000) {
     if (this.timeouts.has(id)) {
       clearTimeout(this.timeouts.get(id));
     }
     this.queue.set(id, callback);
-    const timeoutId = setTimeout(() => this.remove(id), timeout);
+    const timeoutId = setTimeout(() => {
+      const queuedCallback = this.queue.get(id);
+      if (queuedCallback) {
+        queuedCallback({
+          error: {
+            code: -32603,
+            message: `Request timeout after ${timeout}ms. This may indicate a malformed request that was silently rejected by the server.`,
+            data: { timeout, requestId: id }
+          }
+        });
+      }
+      this.remove(id);
+    }, timeout);
     this.timeouts.set(id, timeoutId);
   }
 

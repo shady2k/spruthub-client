@@ -74,7 +74,7 @@ const scenarioTypes = {
         default: false
       },
       data: { 
-        oneOf: [
+        anyOf: [
           { type: 'string' },
           { type: 'object' }
         ]
@@ -89,7 +89,7 @@ const scenarioTypes = {
     properties: {
       index: { type: 'string' },
       data: { 
-        oneOf: [
+        anyOf: [
           { type: 'string' },
           { type: 'object' }
         ]

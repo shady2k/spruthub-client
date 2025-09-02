@@ -10,7 +10,7 @@ const deviceTypes = {
       name: { type: 'string' },
       type: { type: 'string' },
       value: {
-        oneOf: [
+        anyOf: [
           { type: 'object', properties: { boolValue: { type: 'boolean' } } },
           { type: 'object', properties: { intValue: { type: 'integer' } } },
           { type: 'object', properties: { stringValue: { type: 'string' } } },
@@ -34,7 +34,7 @@ const deviceTypes = {
           properties: {
             checked: { type: 'boolean' },
             value: {
-              oneOf: [
+              anyOf: [
                 { type: 'object', properties: { boolValue: { type: 'boolean' } } },
                 { type: 'object', properties: { intValue: { type: 'integer' } } },
                 { type: 'object', properties: { stringValue: { type: 'string' } } }

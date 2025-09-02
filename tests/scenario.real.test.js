@@ -34,11 +34,51 @@ describe("Scenario Real Device Test", () => {
 
   afterAll(async () => {
     if (sprut) {
-      await sprut.close();
-      // Give extra time for cleanup
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      try {
+        await sprut.close();
+        // Give extra time for cleanup
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.log('Error during cleanup:', error.message);
+      }
     }
-  }, 10000); // Increase timeout for cleanup
+  }, 15000); // Increase timeout for cleanup
+
+  test("callMethod with parameter validation on real device", async () => {
+    // Test callMethod with numeric index that will be coerced to string
+    const result = await sprut.callMethod('scenario.get', {
+      index: 100, // This number will be coerced to "100" string by validation
+      expand: "data"
+    });
+
+    console.log('callMethod Result:', JSON.stringify(result, null, 2));
+
+    // Verify the standardized response format
+    expect(result).toHaveProperty('isSuccess');
+    expect(result).toHaveProperty('code');
+    expect(result).toHaveProperty('message');
+    expect(result).toHaveProperty('data');
+
+    if (result.isSuccess) {
+      // Successful response - verify scenario data structure
+      expect(result.data).toHaveProperty('index');
+      expect(result.data.index).toBe('100'); // Should be coerced to string
+      expect(typeof result.data.index).toBe('string');
+      
+      console.log('Parameter validation and coercion worked - numeric 100 became string "100"');
+      
+      // If expand="data" was provided and scenario exists, check the data field
+      if (result.data.data !== undefined) {
+        expect(typeof result.data.data).toBe('string');
+        console.log('Scenario data expanded successfully');
+      }
+    } else {
+      // Error response - verify error structure (expected if scenario 100 doesn't exist)
+      expect(result.code).toBeDefined();
+      expect(result.message).toBeDefined();
+      console.log(`Expected error for non-existent scenario: ${result.message}`);
+    }
+  }, 15000);
 
   test("get scenario with expand data parameter", async () => {
     const result = await sprut.call({

@@ -348,7 +348,7 @@ const scenarioMethods = {
               type: 'object',
               properties: {
                 index: { 
-                  oneOf: [
+                  anyOf: [
                     { type: 'number' },
                     { type: 'string' }
                   ],
