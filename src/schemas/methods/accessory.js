@@ -4,7 +4,7 @@
 
 const accessoryMethods = {
   'accessory.list': {
-    description: 'List all accessories (smart devices) with their services and characteristics',
+    description: 'List all accessories (smart devices) with their services and characteristics. NOTE: For filtering, searching, or MCP server usage, use accessory.search instead as it provides smart filtering and pagination.',
     category: 'accessory',
     method: 'accessory.list',
     rest: { method: 'GET', path: '/accessories' },

@@ -20,3 +20,4 @@ CHANGELOG.md
 src/**/*.test.js
 src/**/*.spec.js
 CLAUDE.md
+.claude/

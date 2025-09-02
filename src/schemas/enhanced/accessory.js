@@ -1,6 +1,6 @@
 const accessoryEnhancedMethods = {
   'accessory.search': {
-    description: 'Search and filter accessories with smart filtering for MCP server usage',
+    description: 'Search and filter accessories with smart filtering, optimized for MCP server usage and natural language queries. Supports room filtering, text search, and device property filtering.',
     category: 'accessory',
     method: 'accessory.search',
     rest: { method: 'GET', path: '/accessories/search' },
