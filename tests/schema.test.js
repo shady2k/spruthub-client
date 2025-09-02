@@ -27,6 +27,7 @@ describe('SprutHub Schema System', () => {
 
       const accessoryMethods = Schema.getMethodsByCategory('accessory');
       expect(Object.keys(accessoryMethods)).toContain('accessory.list');
+      expect(Object.keys(accessoryMethods)).toContain('accessory.search');
       expect(Object.keys(accessoryMethods)).toContain('characteristic.update');
 
       const scenarioMethods = Schema.getMethodsByCategory('scenario');
@@ -44,6 +45,7 @@ describe('SprutHub Schema System', () => {
       // Check for key methods
       expect(methods).toContain('hub.list');
       expect(methods).toContain('accessory.list');
+      expect(methods).toContain('accessory.search');
       expect(methods).toContain('characteristic.update');
       expect(methods).toContain('scenario.list');
       expect(methods).toContain('scenario.create');
