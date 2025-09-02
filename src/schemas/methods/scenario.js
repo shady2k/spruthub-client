@@ -203,7 +203,7 @@ const scenarioMethods = {
         data: {
           type: 'object',
           properties: {
-            index: { type: 'number' }
+            index: { type: 'string' }
           }
         }
       }

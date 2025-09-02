@@ -7,7 +7,7 @@ const scenarioTypes = {
   Scenario: {
     type: 'object',
     properties: {
-      index: { type: ['number', 'string'] },
+      index: { type: 'string' },
       name: { type: 'string' },
       desc: { type: 'string' },
       type: { 
@@ -87,7 +87,7 @@ const scenarioTypes = {
   ScenarioUpdateRequest: {
     type: 'object',
     properties: {
-      index: { type: 'number' },
+      index: { type: 'string' },
       data: { 
         oneOf: [
           { type: 'string' },
