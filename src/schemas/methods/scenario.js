@@ -73,11 +73,8 @@ const scenarioMethods = {
               type: 'object',
               properties: {
                 index: { 
-                  oneOf: [
-                    { type: 'number' },
-                    { type: 'string' }
-                  ],
-                  description: 'Scenario index/ID (can be numeric or string)'
+                  type: 'string',
+                  description: 'Scenario index/ID (string format)'
                 },
                 expand: { 
                   type: 'string',
@@ -107,12 +104,12 @@ const scenarioMethods = {
     },
     examples: [
       {
-        description: 'Get scenario with numeric index',
+        description: 'Get scenario with string index',
         request: {
           params: {
             scenario: {
               get: {
-                index: 1,
+                index: '1',
                 expand: 'data'
               }
             }
@@ -125,7 +122,7 @@ const scenarioMethods = {
           params: {
             scenario: {
               get: {
-                index: 'scenario-id',
+                index: '1',
                 expand: 'data'
               }
             }
