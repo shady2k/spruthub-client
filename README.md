@@ -67,7 +67,7 @@ const { Schema } = require('spruthub-client');
 
 // Get all available methods
 const methods = Schema.getAvailableMethods();
-console.log(methods); // ['hub.list', 'accessory.list', 'scenario.get', ...]
+console.log(methods); // ['hub.list', 'accessory.list', 'accessory.search', 'scenario.get', ...]
 
 // Get schema for specific method
 const updateSchema = Schema.getMethodSchema('characteristic.update');
@@ -108,6 +108,7 @@ All methods return standardized response format: `{ isSuccess, code, message, da
 - `version()`: Get server version information
 - `listHubs()`: List all available hubs
 - `listAccessories(expand)`: List all accessories with optional expansion
+- `searchAccessories(options)`: Search and filter accessories with advanced filtering for MCP server usage
 - `listRooms()`: List all rooms
 - `getRoom(roomId)`: Get specific room by ID
 - `getScenario(id, expand)`: Get scenario by ID
@@ -148,6 +149,66 @@ All API methods return a consistent response structure:
 - `scenario`: Scenario management methods
 - `room`: Room management methods
 - `system`: System information methods
+
+### Enhanced Methods for MCP Server Integration
+
+The library includes enhanced client-side methods optimized for MCP (Model Context Protocol) server usage, providing intelligent filtering and search capabilities.
+
+#### accessory.search - Smart Accessory Filtering
+
+Perfect for natural language queries like "turn on the chandelier in the hall":
+
+```javascript
+const result = await client.callMethod('accessory.search', {
+  // Room filtering
+  roomName: 'зал',              // Find by room name (auto-resolves to room ID)
+  roomId: 13,                   // Or filter by specific room ID
+  
+  // Text search
+  search: 'люстра',             // Search accessory names (case-insensitive)
+  
+  // Device properties
+  manufacturer: 'Xiaomi',       // Filter by manufacturer
+  model: 'Smart Light',         // Filter by device model
+  online: true,                 // Only online devices
+  virtual: false,               // Exclude virtual devices
+  
+  // Service/Characteristic filtering
+  serviceType: 'Lightbulb',     // Filter by service type
+  characteristicType: 'On',     // Filter by characteristic type
+  writable: true,               // Only devices with writable characteristics
+  
+  // Performance controls
+  expand: 'characteristics',    // Expansion level: none, services, characteristics
+  page: 1,                      // Pagination
+  limit: 10                     // Items per page
+});
+
+console.log(result.data);
+// {
+//   accessories: [...],         // Filtered and paginated results
+//   total: 174,                 // Total accessories in system
+//   filtered: 5,                // Accessories matching filters
+//   page: 1, limit: 10,
+//   hasNextPage: false,         // Pagination navigation flags
+//   hasPreviousPage: false,
+//   totalPages: 1,
+//   expand: 'characteristics',
+//   appliedFilters: {           // Summary of applied filters
+//     roomFilter: 'зал (ID: 13)',
+//     searchFilter: 'люстра',
+//     serviceTypeFilter: 'Lightbulb',
+//     writableFilter: true
+//   }
+// }
+```
+
+**Key Benefits:**
+- **Dramatic performance improvement**: No need to load thousands of accessories
+- **Smart room lookup**: Automatic room name to ID resolution
+- **MCP-optimized**: Perfect for natural language processing
+- **Rich metadata**: Complete filtering and pagination information
+- **REST endpoint**: Available at `GET /accessories/search`
 
 ## Framework Integration
 

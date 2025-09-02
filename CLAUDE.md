@@ -52,6 +52,7 @@ The schema system is designed to provide raw schema data without opinionated tra
 **Schema Organization (`src/schemas/`)**
 - `types/` - JSON Schema type definitions (common, device, scenario)
 - `methods/` - Method definitions organized by category (hub, accessory, room, scenario, system)
+- `enhanced/` - Enhanced client-side method schemas (e.g., accessory search with filtering)
 - `index.js` - Main schema API with discovery methods
 
 **Key Schema APIs**
@@ -114,11 +115,13 @@ Example: `characteristic.update` uses:
 - **Recent Enhancement**: Improved `handleApiResponse` to handle nested JSON-RPC responses and ensure consistent error/success format
 
 ### Testing Structure
-- Tests organized in `tests/` directory
+- Tests organized in `tests/` directory with dedicated `tests/enhanced/` for enhanced methods
 - Schema tests validate method definitions and type consistency  
 - Client tests use mocked WebSocket for isolation
+- Enhanced method tests use direct method testing approach for reliability
 - Coverage reports generated in `coverage/` directory
 - **Recent Updates**: Tests updated to validate new standardized response format across all methods
+- **Enhanced Methods Testing**: Comprehensive test suite for `accessory.search` with 14 test cases covering all filtering scenarios
 
 ### Recent Code Quality Improvements (2024)
 
@@ -129,6 +132,26 @@ Example: `characteristic.update` uses:
 - Implemented meaningful WebSocket event handlers (connection logging and token cleanup)
 - Fixed linting errors in examples and schema files
 - All tests passing with improved code coverage
+
+### Enhanced Methods System (2025)
+
+**New Client-Side Processing Architecture:**
+- Enhanced methods are defined with `enhanced: true` flag in their schemas
+- Implementations in `src/enhanced/` directory provide client-side processing
+- The client's `callMethod` intelligently dispatches to enhanced implementations vs. JSON-RPC methods
+- Perfect for MCP server integration requiring smart filtering without massive data transfers
+
+**Current Enhanced Methods:**
+- `accessory.search` - Advanced filtering and pagination with room lookup, text search, device properties, and service/characteristic filtering
+- Includes pagination navigation flags (`hasNextPage`, `hasPreviousPage`, `totalPages`)
+- Smart room name to ID resolution using `room.list` integration
+- REST endpoint: `GET /accessories/search`
+
+**Enhanced Methods Benefits:**
+- **Performance**: Client-side filtering reduces server load and data transfer
+- **MCP Integration**: Optimized for natural language queries like "turn on chandelier in hall"
+- **Extensibility**: Framework for adding more client-side enhancements
+- **Consistency**: Enhanced methods follow same schema and response patterns as core methods
 
 ### Response Format Standardization (Recent Refactor)
 All client methods now return a consistent response structure:
