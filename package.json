@@ -1,6 +1,6 @@
 {
   "name": "spruthub-client",
-  "version": "1.2.7",
+  "version": "1.2.8",
   "description": "WebSocket client for communicating with Sprut.hub smart home ecosystem",
   "main": "src/index.js",
   "scripts": {
