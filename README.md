@@ -2,15 +2,6 @@
 
 A WebSocket client library for communicating with [Sprut.hub](https://spruthub.ru/) smart home ecosystem. Provides both client functionality and comprehensive JSON-RPC API schema definitions for building integrations.
 
-## Recent Changes (v1.2.6+)
-
-- **REST Schema Generation**: Methods now include a `rest` property to map JSON-RPC methods to RESTful endpoints.
-- **REST Method Discovery**: Added a `Schema.getRestMethods()` function to easily retrieve all methods with REST mappings.
-- **Standardized API Response Format**: All client methods now return consistent `{ isSuccess, code, message, data }` structure
-- **Improved Error Handling**: Unified error handling across all managers using `Helpers.handleApiResponse`
-- **Schema Alignment**: Updated schema definitions to reflect actual API response structures with data wrapper objects
-- **Code Quality Improvements**: Removed empty SystemManager class, fixed code duplication, added missing method delegation, implemented WebSocket event handlers, resolved all linting issues
-
 ## Installation
 
 ```bash

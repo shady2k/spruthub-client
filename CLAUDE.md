@@ -120,8 +120,9 @@ Example: `characteristic.update` uses:
 - Client tests use mocked WebSocket for isolation
 - Enhanced method tests use direct method testing approach for reliability
 - Coverage reports generated in `coverage/` directory
-- **Recent Updates**: Tests updated to validate new standardized response format across all methods
+- **Recent Updates**: Tests updated to validate new standardized response format across all methods  
 - **Enhanced Methods Testing**: Comprehensive test suite for `accessory.search` with 14 test cases covering all filtering scenarios
+- **Current Test Coverage**: 80 passing tests across 8 test suites with 77% code coverage
 
 ### Recent Code Quality Improvements (2024)
 
