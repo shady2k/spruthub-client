@@ -259,6 +259,10 @@ class Sprut {
     return await this.scenarioManager.deleteScenario(index);
   }
 
+  async runScenario(index) {
+    return await this.scenarioManager.runScenario(index);
+  }
+
   
 
   // Schema methods

@@ -145,6 +145,34 @@ class ScenarioManager {
       throw error;
     }
   }
+
+  async runScenario(index) {
+    if (!index) {
+      throw new Error("Scenario index must be provided");
+    }
+
+    await this.ensureConnectionAndAuth();
+
+    try {
+      const runResult = await this.call({
+        scenario: {
+          run: {
+            index
+          }
+        }
+      });
+
+      return Helpers.handleApiResponse(
+        runResult,
+        ["scenario", "run"],
+        this.log,
+        "Scenario executed successfully"
+      );
+    } catch (error) {
+      this.log.error("Error running scenario:", error);
+      throw error;
+    }
+  }
 }
 
 module.exports = ScenarioManager;

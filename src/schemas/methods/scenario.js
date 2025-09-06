@@ -411,6 +411,65 @@ const scenarioMethods = {
         }
       }
     ]
+  },
+
+  'scenario.run': {
+    description: 'Run/execute a scenario',
+    category: 'scenario',
+    method: 'scenario.run',
+    rest: { method: 'POST', path: '/scenarios/:index/run' },
+    params: {
+      type: 'object',
+      properties: {
+        scenario: {
+          type: 'object',
+          properties: {
+            run: {
+              type: 'object',
+              properties: {
+                index: { 
+                  type: 'string',
+                  description: 'Scenario index/ID (string format)'
+                }
+              },
+              required: ['index'],
+              additionalProperties: false
+            }
+          },
+          required: ['run'],
+          additionalProperties: false
+        }
+      },
+      required: ['scenario'],
+      additionalProperties: false
+    },
+    result: {
+      type: 'object',
+      properties: {
+        isSuccess: { type: 'boolean' },
+        code: { type: 'number' },
+        message: { type: 'string' },
+        data: {
+          type: 'object',
+          properties: {},
+          additionalProperties: false
+        }
+      }
+    },
+    examples: [
+      {
+        description: 'Run scenario by string index',
+        request: {
+          params: {
+            scenario: {
+              run: {
+                index: "2"
+              }
+            }
+          }
+        }
+      }
+    ]
   }
 };
 
