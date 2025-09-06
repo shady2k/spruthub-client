@@ -35,9 +35,23 @@ describe("Scenario Real Device Test", () => {
   afterAll(async () => {
     if (sprut) {
       try {
+        // Clear any potential timeouts in the queue system
+        if (sprut.queue && sprut.queue.clearAll) {
+          sprut.queue.clearAll();
+        }
+        
+        // Force close WebSocket connection
+        if (sprut.wsManager && sprut.wsManager.forceCleanup) {
+          sprut.wsManager.forceCleanup();
+        }
+        
         await sprut.close();
-        // Give extra time for cleanup
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Give extra time for cleanup and force garbage collection
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Clear references
+        sprut = null;
       } catch (error) {
         console.log('Error during cleanup:', error.message);
       }

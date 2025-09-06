@@ -223,6 +223,11 @@ class Sprut {
   }
 
   async close() {
+    // Clear all pending requests in the queue
+    if (this.queue && this.queue.clearAll) {
+      this.queue.clearAll();
+    }
+    
     // Cleanup all active log subscriptions before closing
     if (this.logManager) {
       try {

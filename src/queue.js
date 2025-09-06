@@ -37,6 +37,15 @@ class Queue {
     }
     this.queue.delete(id);
   }
+
+  clearAll() {
+    // Clear all timeouts to prevent any pending callbacks
+    for (const timeoutId of this.timeouts.values()) {
+      clearTimeout(timeoutId);
+    }
+    this.timeouts.clear();
+    this.queue.clear();
+  }
 }
 
 module.exports = Queue;

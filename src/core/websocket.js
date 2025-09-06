@@ -75,6 +75,9 @@ class WebSocketManager {
     this.reconnectTimeout = setTimeout(() => {
       this.reconnect();
     }, 5000); // 5 seconds delay
+    
+    // Unref the timeout so it doesn't keep the process alive
+    this.reconnectTimeout.unref();
   }
 
   reconnect() {
@@ -116,6 +119,9 @@ class WebSocketManager {
           this.forceCleanup();
           resolve();
         }, 1000); // 1 second timeout for tests
+        
+        // Unref the timeout so it doesn't keep the process alive
+        timeout.unref();
 
         // Listen for the 'close' event
         this.wsClient.once("close", () => {
