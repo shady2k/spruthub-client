@@ -12,19 +12,7 @@ const systemMethods = {
     rest: { method: 'GET', path: '/server/version' },
     params: {
       type: 'object',
-      properties: {
-        server: {
-          type: 'object',
-          properties: {
-            version: {
-              type: 'object',
-              properties: {},
-              additionalProperties: false
-            }
-          },
-          additionalProperties: false
-        }
-      },
+      properties: {},
       additionalProperties: false
     },
     result: {
@@ -38,8 +26,28 @@ const systemMethods = {
           properties: {
             version: { type: 'string' },
             revision: { type: 'number' },
-            build: { type: 'string' },
-            platform: { type: 'string' }
+            template: { type: 'number' },
+            hardware: { type: 'string' },
+            branch: { type: 'string' },
+            platform: {
+              type: 'object',
+              properties: {
+                manufacturer: { type: 'string' },
+                model: { type: 'string' },
+                serial: { type: 'string' },
+                mac: { type: 'string' },
+                jdk: { type: 'string' }
+              }
+            },
+            name: { type: 'string' },
+            manufacturer: { type: 'string' },
+            model: { type: 'string' },
+            serial: { type: 'string' },
+            owner: { type: 'string' },
+            lang: { type: 'string' },
+            online: { type: 'boolean' },
+            lastSeen: { type: 'number' },
+            discovery: { type: 'boolean' }
           }
         }
       }
