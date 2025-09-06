@@ -5,6 +5,7 @@ const DeviceManager = require('../entities/device');
 const HubManager = require('../entities/hub');
 const RoomManager = require('../entities/room');
 const ScenarioManager = require('../entities/scenario');
+const LogManager = require('../entities/log');
 const SchemaManager = require('../schemas');
 const enhancedMethods = require('../enhanced');
 const ParameterValidator = require('../utils/parameterValidator');
@@ -81,6 +82,11 @@ class Sprut {
       logger
     );
 
+    this.logManager = new LogManager(
+      (json) => this.call(json),
+      () => this.ensureConnectionAndAuthentication(),
+      logger
+    );
 
     // Start connection
     this.wsManager.connect();
@@ -89,9 +95,15 @@ class Sprut {
   onMessage(data) {
     try {
       const response = JSON.parse(data);
-      if (!response.event) {
-        this.log.debug(response, "Received message:");
+      
+      // Handle streaming events separately from request/response pairs
+      if (response.event) {
+        this.handleStreamingEvent(response);
+        return;
       }
+      
+      // Handle regular JSON-RPC responses
+      this.log.debug(response, "Received message:");
       const id = response.id;
       const callback = this.queue.get(id);
       if (callback) {
@@ -103,6 +115,21 @@ class Sprut {
     }
   }
 
+  handleStreamingEvent(eventData) {
+    this.log.debug("Received streaming event:", eventData);
+    
+    // Handle log streaming events
+    if (eventData.event && eventData.event.log) {
+      if (this.logManager) {
+        this.logManager.handleLogEvent(eventData);
+      }
+      return;
+    }
+    
+    // Handle other future streaming events here
+    this.log.debug("Unhandled streaming event type:", eventData);
+  }
+
   handleConnection() {
     this.log.info("WebSocket connection established");
   }
@@ -110,6 +137,11 @@ class Sprut {
   handleDisconnection() {
     this.log.info("WebSocket connection closed");
     this.authManager.clearToken();
+    
+    // Clean up any active log subscriptions
+    if (this.logManager) {
+      this.logManager.cleanup();
+    }
   }
 
   handleError(error) {
@@ -191,6 +223,16 @@ class Sprut {
   }
 
   async close() {
+    // Cleanup all active log subscriptions before closing
+    if (this.logManager) {
+      try {
+        await this.logManager.unsubscribeAllLogs();
+        this.log.debug("All log subscriptions cleaned up during shutdown");
+      } catch (error) {
+        this.log.error("Error cleaning up log subscriptions during shutdown:", error);
+      }
+    }
+    
     return await this.wsManager.close();
   }
 
@@ -228,7 +270,23 @@ class Sprut {
   }
 
   async getLogs(count) {
-    return await this.hubManager.getLogs(count);
+    return await this.logManager.getLogs(count);
+  }
+
+  async subscribeLogs(onLogEvent) {
+    return await this.logManager.subscribeLogs(onLogEvent);
+  }
+
+  async unsubscribeLogs(uuid) {
+    return await this.logManager.unsubscribeLogs(uuid);
+  }
+
+  async unsubscribeAllLogs() {
+    return await this.logManager.unsubscribeAllLogs();
+  }
+
+  getActiveLogSubscriptions() {
+    return this.logManager.getActiveSubscriptions();
   }
 
   async listRooms() {

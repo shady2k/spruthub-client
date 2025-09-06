@@ -117,29 +117,6 @@ class HubManager {
     }
   }
 
-  async getLogs(count = 100) {
-    await this.ensureConnectionAndAuth();
-
-    try {
-      const logResult = await this.call({
-        log: {
-          list: {
-            count: count
-          }
-        }
-      });
-
-      return Helpers.handleApiResponse(
-        logResult,
-        ["log", "list", "log"],
-        this.log,
-        "Logs retrieved successfully"
-      );
-    } catch (error) {
-      this.log.error("Error getting logs:", error);
-      throw error;
-    }
-  }
 }
 
 module.exports = HubManager;
