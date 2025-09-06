@@ -3,8 +3,6 @@
  */
 
 const systemMethods = {
-  
-
   'server.version': {
     description: 'Get version information',
     category: 'system', 

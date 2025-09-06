@@ -227,6 +227,10 @@ class Sprut {
     return await this.hubManager.version();
   }
 
+  async getLogs(count) {
+    return await this.hubManager.getLogs(count);
+  }
+
   async listRooms() {
     return await this.roomManager.listRooms();
   }

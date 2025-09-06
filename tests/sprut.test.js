@@ -555,6 +555,38 @@ const responseRules = [
         }
       }
     })
+  },
+  {
+    match: (message) => message.params?.log?.list,
+    response: (message) => ({
+      id: message.id,
+      result: {
+        log: {
+          list: {
+            log: [
+              {
+                time: 1757059766002,
+                level: "LOG_LEVEL_INFO",
+                path: "Automation",
+                message: "Сценарий 100: Dispatching action: main in state: on"
+              },
+              {
+                time: 1757058956184,
+                level: "LOG_LEVEL_INFO",
+                path: "Automation", 
+                message: "Сценарий 100: Clearing timer timerError"
+              },
+              {
+                time: 1757058900000,
+                level: "LOG_LEVEL_WARN",
+                path: "System",
+                message: "Test warning message"
+              }
+            ]
+          }
+        }
+      }
+    })
   }
 ];
 
@@ -673,6 +705,50 @@ describe("Sprut WebSocket Client", () => {
         lastSeen: 1756647767291,
         discovery: false,
       },
+    });
+  });
+
+  test("get logs command", async () => {
+    const resultExecute = await sprut.getLogs(200);
+
+    expect(resultExecute).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Success",
+      data: expect.arrayContaining([
+        expect.objectContaining({
+          time: expect.any(Number),
+          level: expect.stringMatching(/^LOG_LEVEL_/),
+          path: expect.any(String),
+          message: expect.any(String)
+        })
+      ])
+    });
+
+    expect(resultExecute.data).toHaveLength(3);
+    expect(resultExecute.data[0]).toMatchObject({
+      time: 1757059766002,
+      level: "LOG_LEVEL_INFO",
+      path: "Automation",
+      message: "Сценарий 100: Dispatching action: main in state: on"
+    });
+  });
+
+  test("get logs with default count", async () => {
+    const resultExecute = await sprut.getLogs();
+
+    expect(resultExecute).toMatchObject({
+      isSuccess: true,
+      code: 0,
+      message: "Success",
+      data: expect.arrayContaining([
+        expect.objectContaining({
+          time: expect.any(Number),
+          level: expect.stringMatching(/^LOG_LEVEL_/),
+          path: expect.any(String),
+          message: expect.any(String)
+        })
+      ])
     });
   });
 

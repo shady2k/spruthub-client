@@ -193,6 +193,73 @@ describe('SprutHub Schema System', () => {
       expect(accessoryType.properties.online).toBeDefined();
     });
   });
+
+  describe('Parameter Validation with Defaults', () => {
+    test('log.list should apply default count value', () => {
+      const ParameterValidator = require('../src/utils/parameterValidator');
+      const validator = new ParameterValidator();
+
+      const logSchema = Schema.getMethodSchema('log.list');
+      expect(logSchema).toBeDefined();
+      expect(logSchema.params.properties.log.properties.list.properties.count.default).toBe(100);
+
+      // Test validation with empty params
+      const emptyParams = { log: { list: {} } };
+      const validation = validator.validateAndCoerce(logSchema, emptyParams);
+      
+      expect(validation.isValid).toBe(true);
+      expect(validation.coercedData.log.list.count).toBe(100);
+    });
+
+    test('log.list should preserve provided count value', () => {
+      const ParameterValidator = require('../src/utils/parameterValidator');
+      const validator = new ParameterValidator();
+
+      const logSchema = Schema.getMethodSchema('log.list');
+      
+      // Test validation with provided params
+      const paramsWithCount = { log: { list: { count: 50 } } };
+      const validation = validator.validateAndCoerce(logSchema, paramsWithCount);
+      
+      expect(validation.isValid).toBe(true);
+      expect(validation.coercedData.log.list.count).toBe(50);
+    });
+
+    test('log.list mimics callMethod parameter building and validation flow', () => {
+      // This test mimics exactly what happens in callMethod
+      const { Sprut } = require('../src/index');
+      
+      // Create a mock client to access buildParamsFromSchema
+      const mockClient = new Sprut({
+        wsUrl: 'ws://localhost:1234',
+        sprutEmail: 'test@example.com',
+        sprutPassword: 'password',
+        serial: 'test123',
+        logger: { info: jest.fn(), debug: jest.fn(), error: jest.fn(), warn: jest.fn() }
+      });
+
+      const methodSchema = mockClient.getMethodSchema('log.list');
+      expect(methodSchema).toBeDefined();
+
+      // Step 1: Build parameters from schema (this is what CLI does with empty requestData)
+      const requestData = {}; // This is what CLI sends
+      let params = mockClient.buildParamsFromSchema(methodSchema.params, requestData);
+      
+      console.log('Built params:', JSON.stringify(params, null, 2));
+
+      // Step 2: Validate and coerce parameters
+      const validation = mockClient.parameterValidator.validateAndCoerce(methodSchema, params);
+      
+      console.log('Validation result:', JSON.stringify({
+        isValid: validation.isValid,
+        coercedData: validation.coercedData,
+        errors: validation.errors
+      }, null, 2));
+
+      expect(validation.isValid).toBe(true);
+      expect(validation.coercedData.log.list.count).toBe(100);
+    });
+  });
 });
 
 describe('Error Code Mapping', () => {

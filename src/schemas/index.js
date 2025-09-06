@@ -11,6 +11,7 @@ const accessoryMethods = require('./methods/accessory');
 const scenarioMethods = require('./methods/scenario');
 const roomMethods = require('./methods/room');
 const systemMethods = require('./methods/system');
+const logMethods = require('./methods/log');
 const accessoryEnhancedMethods = require('./enhanced/accessory');
 
 /**
@@ -50,6 +51,10 @@ const sprutHubSchema = {
     system: {
       name: 'System Information',
       description: 'High-level system information and aggregated data'
+    },
+    logs: {
+      name: 'Log Management',
+      description: 'Methods for retrieving and managing system logs'
     }
   },
 
@@ -60,6 +65,7 @@ const sprutHubSchema = {
     ...scenarioMethods,
     ...roomMethods,
     ...systemMethods,
+    ...logMethods,
     ...accessoryEnhancedMethods
   }
 };
