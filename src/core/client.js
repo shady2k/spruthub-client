@@ -111,12 +111,12 @@ class Sprut {
         this.queue.remove(id);
       }
     } catch (error) {
-      this.log.error("Error parsing message:", error);
+      this.log.error(error, "Error parsing message:");
     }
   }
 
   handleStreamingEvent(eventData) {
-    this.log.debug("Received streaming event:", eventData);
+    // this.log.debug(eventData, "Received streaming event:");
     
     // Handle log streaming events
     if (eventData.event && eventData.event.log) {
@@ -127,7 +127,6 @@ class Sprut {
     }
     
     // Handle other future streaming events here
-    this.log.debug("Unhandled streaming event type:", eventData);
   }
 
   handleConnection() {

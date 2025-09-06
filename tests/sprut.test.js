@@ -675,7 +675,7 @@ describe("Sprut WebSocket Client", () => {
     });
   });
 
-  test("server version command", async () => {
+  test("hub version command", async () => {
     const resultExecute = await sprut.version();
 
     expect(resultExecute).toMatchObject({

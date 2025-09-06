@@ -16,9 +16,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run lint:fix` - Auto-fix ESLint issues
 - `npm run prepublishOnly` - Run lint and tests before publishing
 
-### Examples
-- `node examples/schema-usage.js` - Demonstrate schema discovery and usage
-- `node examples/fastify-integration.js` - Show Fastify framework integration patterns
 
 ## Architecture Overview
 
@@ -35,7 +32,7 @@ All functionality is split into specialized managers:
 - `WebSocketManager` - WebSocket connection lifecycle
 - `AuthManager` - Authentication with Sprut.hub servers
 - `DeviceManager` - Device/accessory operations
-- `HubManager` - Hub management operations and system information (includes server.version)
+- `HubManager` - Hub management operations and system information
 - `RoomManager` - Room/zone management
 - `ScenarioManager` - Automation scenario CRUD operations
 
