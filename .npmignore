@@ -1,5 +1,6 @@
 node_modules/
 *.log
+*.tgz
 .DS_Store
 coverage/
 .nyc_output/
@@ -21,3 +22,6 @@ src/**/*.test.js
 src/**/*.spec.js
 CLAUDE.md
 .claude/
+.serena/
+.thinkrail/
+.vscode/
