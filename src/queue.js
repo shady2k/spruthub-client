@@ -38,6 +38,12 @@ class Queue {
     this.queue.delete(id);
   }
 
+  failAll() {
+    const callbacks = Array.from(this.queue.values());
+    this.clearAll();
+    for (const callback of callbacks) callback({ error: { code: -32603, message: 'Connection closed' } });
+  }
+
   clearAll() {
     // Clear all timeouts to prevent any pending callbacks
     for (const timeoutId of this.timeouts.values()) {

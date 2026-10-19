@@ -9,6 +9,7 @@ class LogManager {
     // Track active log subscriptions
     this.activeSubscriptions = new Map();
     this.logEventHandlers = new Map();
+    this.pendingHandlers = new Set();
   }
 
   async getLogs(count = 100) {
@@ -37,6 +38,8 @@ class LogManager {
 
   async subscribeLogs(onLogEvent) {
     await this.ensureConnectionAndAuth();
+    // Events can arrive in the same transport batch as the subscribe response.
+    if (typeof onLogEvent === "function") this.pendingHandlers.add(onLogEvent);
 
     try {
       const subscribeResult = await this.call({
@@ -84,6 +87,8 @@ class LogManager {
     } catch (error) {
       this.log.error("Error subscribing to logs:", error);
       throw error;
+    } finally {
+      this.pendingHandlers.delete(onLogEvent);
     }
   }
 
@@ -168,18 +173,28 @@ class LogManager {
   }
 
   handleLogEvent(eventData) {
-    if (!eventData || !eventData.event || !eventData.event.log || !eventData.event.log.log) {
-      this.log.warn("Invalid log event data received:", eventData);
+    if (!eventData || !eventData.event || !eventData.event.log || !Array.isArray(eventData.event.log.log)) {
+      this.log.warn("Invalid log event data received");
       return;
     }
 
     const logEntries = eventData.event.log.log;
     
+    for (const handler of this.pendingHandlers) {
+      for (const entry of logEntries) {
+        if (!entry || typeof entry !== 'object') continue;
+        try {
+          handler({ subscriptionId: null, timestamp: entry.time, level: entry.level,
+            component: entry.path, message: entry.message, raw: entry });
+        } catch { this.log.warn('Pending log handler failed'); }
+      }
+    }
     // Call all registered event handlers
     for (const [uuid, handler] of this.logEventHandlers) {
       if (this.activeSubscriptions.has(uuid)) {
         try {
           for (const logEntry of logEntries) {
+            if (!logEntry || typeof logEntry !== "object") continue;
             handler({
               subscriptionId: uuid,
               timestamp: logEntry.time,
@@ -199,6 +214,7 @@ class LogManager {
   cleanup() {
     this.activeSubscriptions.clear();
     this.logEventHandlers.clear();
+    this.pendingHandlers.clear();
   }
 }
 

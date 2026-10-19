@@ -1,8 +1,13 @@
 const WebSocket = require("ws");
 
 class WebSocketManager {
-  constructor(wsUrl, logger) {
+  constructor(wsUrl, logger, options = {}) {
     this.wsUrl = wsUrl;
+    this.retryAttempt = 0;
+    this.heartbeatIntervalMs = options.heartbeatIntervalMs ?? 30000;
+    this.heartbeatTimeoutMs = options.heartbeatTimeoutMs ?? 10000;
+    this.retryBase = options.baseMs || 1000;
+    this.retryMax = options.maxMs || 30000;
     this.log = logger;
     this.wsClient = null;
     this.isConnected = false;
@@ -21,7 +26,8 @@ class WebSocketManager {
   }
 
   connect() {
-    this.wsClient = new WebSocket(this.wsUrl);
+    if (this.isTerminated) return;
+    this.wsClient = new WebSocket(this.wsUrl, { handshakeTimeout: 10000 });
     this.setupEventHandlers();
   }
 
@@ -32,11 +38,31 @@ class WebSocketManager {
     this.wsClient.on("message", (data) => this.handleMessage(data));
     this.wsClient.on("close", () => this.handleDisconnection());
     this.wsClient.on("error", (error) => this.handleError(error));
+    this.wsClient.on("pong", () => {
+      this.retryAttempt = 0;
+      clearTimeout(this.pongDeadline);
+      this.pongDeadline = null;
+    });
   }
 
   handleConnection() {
     this.log.info("Spruthub connected!");
     this.isConnected = true;
+    this.clearHeartbeat();
+    if (this.heartbeatIntervalMs > 0) {
+      this.heartbeat = setInterval(() => {
+        if (!this.isOpen() || this.pongDeadline) return;
+        // Only a missing reply to a WebSocket control ping is failure evidence.
+        // Silence in hub logs is normal and never triggers this watchdog.
+        this.pongDeadline = setTimeout(() => {
+          this.pongDeadline = null;
+          if (this.wsClient) this.wsClient.terminate();
+        }, this.heartbeatTimeoutMs);
+        this.pongDeadline.unref();
+        try { this.wsClient.ping(); } catch { this.wsClient.terminate(); }
+      }, this.heartbeatIntervalMs);
+      this.heartbeat.unref();
+    }
     if (this.connectionHandlers.onOpen) {
       this.connectionHandlers.onOpen();
     }
@@ -49,6 +75,8 @@ class WebSocketManager {
   }
 
   handleDisconnection() {
+    this.clearHeartbeat();
+    this.isConnected = false;
     if (this.isTerminated) {
       this.log.info("Spruthub connection closed!");
       return;
@@ -74,10 +102,17 @@ class WebSocketManager {
     // Delay before attempting to reconnect
     this.reconnectTimeout = setTimeout(() => {
       this.reconnect();
-    }, 5000); // 5 seconds delay
+    }, Math.min(this.retryMax, this.retryBase * 2 ** Math.min(this.retryAttempt++, 10)) * (0.5 + Math.random() * 0.5));
     
     // Unref the timeout so it doesn't keep the process alive
-    this.reconnectTimeout.unref();
+    if (!this.keepAlive) this.reconnectTimeout.unref();
+  }
+
+  resetConnection() {
+    // An unacknowledged subscribe may already exist remotely. Fence that socket.
+    this.isConnected = false;
+    this.clearHeartbeat();
+    if (this.wsClient && !this.isTerminated) this.wsClient.terminate();
   }
 
   reconnect() {
@@ -86,7 +121,7 @@ class WebSocketManager {
   }
 
   handleError(error) {
-    this.log.error("Spruthub error:", error);
+    this.log.error("Spruthub WebSocket transport error");
     if (this.connectionHandlers.onError) {
       this.connectionHandlers.onError(error);
     }
@@ -112,6 +147,8 @@ class WebSocketManager {
   async close() {
     return new Promise((resolve) => {
       this.isTerminated = true;
+      this.clearHeartbeat();
+      clearTimeout(this.reconnectTimeout);
       if (this.wsClient) {
         // Add a timeout to prevent hanging
         const timeout = setTimeout(() => {
@@ -144,7 +181,15 @@ class WebSocketManager {
     });
   }
 
+  clearHeartbeat() {
+    clearInterval(this.heartbeat);
+    clearTimeout(this.pongDeadline);
+    this.heartbeat = null;
+    this.pongDeadline = null;
+  }
+
   cleanup() {
+    this.clearHeartbeat();
     if (this.wsClient) {
       this.wsClient.removeAllListeners();
       this.wsClient = null;
@@ -157,6 +202,7 @@ class WebSocketManager {
   }
 
   forceCleanup() {
+    this.clearHeartbeat();
     if (this.wsClient) {
       this.wsClient.removeAllListeners();
       try {

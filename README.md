@@ -247,3 +247,31 @@ restMethods.forEach(route => {
 ## License
 
 MIT
+### Durable log collector
+
+`client.watchLogs(async record => { /* await durable output */ }, { count: 1000 })`
+returns `{ ready, done, stop() }`. `ready` describes the first attempt (it may reject;
+the watcher still retries); await `done` for the collector lifetime. `stop()` closes
+the client transport and flushes pending output. Use a dedicated client instance.
+Ordinary `subscribeLogs` remains a single-connection API for compatibility.
+
+The watcher authenticates and subscribes on each connection before requesting up
+to 1000 recent records. It preserves **all** history/live overlap, including truly
+identical events. History records have `replay: true, possibleDuplicate: true`.
+There is no event ID/cursor, so replay completeness or exactly-once delivery is
+not promised. `gap` records describe disconnects, bounded history, failed recovery
+and output overflow. A quiet WebSocket is not evidence of a failed connection;
+WebSocket control ping/pong runs every 30 seconds with a 10-second pong deadline.
+Only missing pong evidence triggers termination; log silence does not.
+
+Records include `type`, `session`, monotonically increasing `sequence`, and ISO
+`receivedAt`. Hub records use `type: hub_log`, `source: live|history` and retain
+original `time` (Unix milliseconds), `level`, `path`, `message`. Auth payloads and
+raw transport frames are never included. Response diagnostics contain metadata
+only. Treat hub-provided messages themselves as potentially sensitive.
+
+The pending output queue defaults to 4096 records (`maxPending` can override).
+Output is awaited serially. Overflow is reported with a dropped-record count;
+sequence holes are intentional. Supply an output timeout: no callback can be
+forced to resolve by the library. Reconnection and recovery use bounded backoff
+with jitter; a failed authentication/request cannot silently stall forever.
