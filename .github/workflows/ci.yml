@@ -26,6 +26,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: node --test .github/scripts/release-gates.test.cjs
       - run: npm run lint
       - run: npm test -- --runInBand
       - run: node .github/scripts/package-smoke.cjs

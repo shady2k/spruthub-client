@@ -12,6 +12,9 @@ consumer with no source-tree dependency lookup, and runs fake WebSocket recovery
 replay/duplicate/millisecond and shutdown checks against the installed API.
 
 `publish.yml` remains separate and tag-only (`v*`). No CI action creates a tag,
-updates a version or publishes a package. Before a future release, review that the
-tag matches package.json, pin the intended npm tool version, and run the package
-smoke gate before publish. No release is performed by this change.
+updates a version or publishes a package. The release workflow now rejects
+non-tag refs or a tag not exactly equal to
+`v` plus package.json version before dependency installation. CI tests matching
+stable/prerelease versions, mismatches and a branch named like a tag without
+creating any real tag. Before a future release, review the intended npm tool
+version and consider also enforcing the clean-package smoke before publish. No release is performed by this change.
