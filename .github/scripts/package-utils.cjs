@@ -20,7 +20,7 @@ function pack(source, destination) {
     assert(['package.json', 'README.md', 'LICENSE'].includes(name) || allowed.some(prefix => name.startsWith(prefix)), `Unexpected package member: ${name}`);
     assert(!/(^|\/)(\.env[^/]*|\.git|\.aws|\.codex|\.claude|\.serena|artifacts|coverage|tests)(\/|$)|\.tgz$|credentials\.json$/i.test(name), `Private/runtime artifact: ${name}`);
     const contents = run('tar', ['-xOzf', archive, `package/${name}`], source);
-    assert(!/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|192\.168\.\d+\.\d+|inside\.shady2k\.ru|\/Users\/shady\//.test(contents), `Sensitive/private content pattern: ${name}`);
+    assert(!/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|gh[pousr]_[A-Za-z0-9]{20,}|192\.168\.\d+\.\d+|\/(?:Users|home)\/[^/\s]+\//.test(contents), `Sensitive/private content pattern: ${name}`);
   }
   console.log(`Audited ${report.name}@${report.version}: ${report.files.length} files, ${report.integrity}`);
   return { archive, report };
