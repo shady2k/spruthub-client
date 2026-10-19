@@ -7,123 +7,68 @@ class AuthManager {
     this.log = logger;
     this.call = callMethod;
     this.token = null;
+    this.generation = 0;
+    this.authentication = null;
   }
 
-  isAuthenticated() {
-    return !!this.token;
-  }
+  isAuthenticated() { return !!this.token; }
+  getToken() { return this.token; }
+  setToken(token) { this.cancelAuthentication(); this.token = token; }
 
-  getToken() {
-    return this.token;
-  }
-
-  setToken(token) {
-    this.token = token;
+  cancelAuthentication() {
+    this.generation++;
+    this.authentication = null;
   }
 
   clearToken() {
+    this.cancelAuthentication();
     this.token = null;
   }
 
+  authenticate() {
+    if (this.authentication) return this.authentication;
+    const attempt = this.performAuthentication(this.generation);
+    this.authentication = attempt;
+    const finished = () => { if (this.authentication === attempt) this.authentication = null; };
+    attempt.then(finished, finished);
+    return attempt;
+  }
 
-  async authenticate() {
-    return new Promise((resolve, reject) => {
-      // Step 1: Initial auth request
-      this.call({
-        account: {
-          auth: {
-            params: [],
-          },
-        },
-      })
-        .then((authCall) => {
-          if (
-            Helpers.getNestedProperty(authCall, [
-              "result",
-              "account",
-              "auth",
-              "status",
-            ]) !== "ACCOUNT_RESPONSE_SUCCESS" ||
-            Helpers.getNestedProperty(authCall, [
-              "result",
-              "account",
-              "auth",
-              "question",
-              "type",
-            ]) !== "QUESTION_TYPE_EMAIL"
-          ) {
-            reject(new Error("Expected email question type."));
-          } else {
-            // Step 2: Send email
-            this.call({
-              account: {
-                answer: {
-                  data: this.sprutEmail,
-                },
-              },
-            })
-              .then((emailCall) => {
-                if (
-                  Helpers.getNestedProperty(emailCall, [
-                    "result",
-                    "account",
-                    "answer",
-                    "question",
-                    "type",
-                  ]) !== "QUESTION_TYPE_PASSWORD"
-                ) {
-                  reject(new Error("Expected password question type."));
-                } else {
-                  // Step 3: Send password
-                  this.call({
-                    account: {
-                      answer: {
-                        data: this.sprutPassword,
-                      },
-                    },
-                  })
-                    .then((passwordCall) => {
-                      if (
-                        Helpers.getNestedProperty(passwordCall, [
-                          "result",
-                          "account",
-                          "answer",
-                          "status",
-                        ]) !== "ACCOUNT_RESPONSE_SUCCESS"
-                      ) {
-                        reject(new Error("Authentication failed."));
-                      } else {
-                        this.token = passwordCall.result.account.answer.token;
-                        resolve({
-                          isError: false,
-                          result: {
-                            token: this.token,
-                          },
-                        });
-                      }
-                    })
-                    .catch(reject);
-                }
-              })
-              .catch(reject);
-          }
-        })
-        .catch(reject);
-    });
+  async performAuthentication(generation) {
+    const check = () => {
+      if (generation !== this.generation) throw new Error('Authentication cancelled');
+    };
+    const request = async params => {
+      check();
+      const result = await this.call(params);
+      check();
+      return result;
+    };
+    const initial = await request({ account: { auth: { params: [] } } });
+    if (Helpers.getNestedProperty(initial, ['result', 'account', 'auth', 'status']) !== 'ACCOUNT_RESPONSE_SUCCESS' ||
+        Helpers.getNestedProperty(initial, ['result', 'account', 'auth', 'question', 'type']) !== 'QUESTION_TYPE_EMAIL') {
+      throw new Error('Expected email question type.');
+    }
+    const email = await request({ account: { answer: { data: this.sprutEmail } } });
+    if (Helpers.getNestedProperty(email, ['result', 'account', 'answer', 'question', 'type']) !== 'QUESTION_TYPE_PASSWORD') {
+      throw new Error('Expected password question type.');
+    }
+    const password = await request({ account: { answer: { data: this.sprutPassword } } });
+    const answer = Helpers.getNestedProperty(password, ['result', 'account', 'answer']);
+    if (answer?.status !== 'ACCOUNT_RESPONSE_SUCCESS' || !answer.token) throw new Error('Authentication failed.');
+    check();
+    this.token = answer.token;
+    return { isError: false, result: { token: this.token } };
   }
 
   async ensureAuthenticated() {
-    if (!this.token) {
-      const authResult = await this.authenticate();
-      if (authResult.isError) {
-        throw new Error("Authentication failed.");
-      }
-    }
+    if (!this.token) await this.authenticate();
   }
 
-  async refreshToken() {
+  refreshToken() {
+    if (this.authentication) return this.authentication;
     this.clearToken();
-    return await this.authenticate();
+    return this.authenticate();
   }
 }
 

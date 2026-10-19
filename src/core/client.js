@@ -1,3 +1,4 @@
+const { EventEmitter } = require('events');
 const WebSocketManager = require('./websocket');
 const AuthManager = require('./auth');
 const Queue = require('../queue');
@@ -10,8 +11,10 @@ const SchemaManager = require('../schemas');
 const enhancedMethods = require('../enhanced');
 const ParameterValidator = require('../utils/parameterValidator');
 
-class Sprut {
+class Sprut extends EventEmitter {
   constructor(opts) {
+    super();
+    this.closing = false;
     const { 
       wsUrl, 
       sprutEmail, 
@@ -46,7 +49,7 @@ class Sprut {
     }
 
     // Initialize WebSocket manager
-    this.wsManager = new WebSocketManager(wsUrl, logger);
+    this.wsManager = new WebSocketManager(wsUrl, logger, opts.reconnect);
     this.wsManager.setEventHandlers({
       onOpen: () => this.handleConnection(),
       onMessage: (data) => this.onMessage(data),
@@ -95,6 +98,7 @@ class Sprut {
   onMessage(data) {
     try {
       const response = JSON.parse(data);
+      if (!response || typeof response !== "object") return;
       
       // Handle streaming events separately from request/response pairs
       if (response.event) {
@@ -103,7 +107,7 @@ class Sprut {
       }
       
       // Handle regular JSON-RPC responses
-      this.log.debug(response, "Received message:");
+      this.log.debug({ id: typeof response.id === "number" ? response.id : undefined, hasError: !!response.error }, "Received response metadata");
       const id = response.id;
       const callback = this.queue.get(id);
       if (callback) {
@@ -111,7 +115,7 @@ class Sprut {
         this.queue.remove(id);
       }
     } catch (error) {
-      this.log.error(error, "Error parsing message:");
+      this.log.warn("Invalid WebSocket message ignored");
     }
   }
 
@@ -131,11 +135,14 @@ class Sprut {
 
   handleConnection() {
     this.log.info("WebSocket connection established");
+    this.emit("connected");
   }
 
   handleDisconnection() {
     this.log.info("WebSocket connection closed");
     this.authManager.clearToken();
+    this.queue.failAll();
+    this.emit("disconnected");
     
     // Clean up any active log subscriptions
     if (this.logManager) {
@@ -143,33 +150,38 @@ class Sprut {
     }
   }
 
-  handleError(error) {
-    this.log.error("WebSocket error occurred:", error);
+  handleError(_error) {
+    this.log.error("WebSocket transport error occurred");
   }
 
-  async connected() {
-    return new Promise((resolve) => {
-      if (this.wsManager.isConnected) {
-        resolve();
-      } else {
-        const interval = setInterval(() => {
-          if (this.wsManager.isConnected) {
-            resolve();
-            clearInterval(interval);
-          }
-        }, 100);
-      }
+  async connected(timeout = this.defaultTimeout) {
+    if (this.closing) throw new Error("Client closed");
+    if (this.wsManager.isConnected) return;
+    await new Promise((resolve, reject) => {
+      const done = () => { cleanup(); resolve(); };
+      const closed = () => { cleanup(); reject(new Error("Client closed")); };
+      const timer = setTimeout(() => { cleanup(); reject(new Error("Connection timeout")); }, timeout);
+      const cleanup = () => { clearTimeout(timer); this.off("connected", done); this.off("closed", closed); };
+      this.once("connected", done);
+      this.once("closed", closed);
     });
   }
 
+  // Durable collector; ordinary subscribeLogs remains a single-connection API.
+  watchLogs(onRecord, options) {
+    const LogWatcher = require('../entities/log-watcher');
+    return new LogWatcher(this, onRecord, options);
+  }
+
   async ensureConnectionAndAuthentication() {
+    if (this.closing) throw new Error("Client closed");
     if (!this.wsManager.isConnected) {
       throw new Error("Not connected");
     }
     await this.authManager.ensureAuthenticated();
   }
 
-  async call(json, timeout = null) {
+  async call(json, timeout = null, retryAuth = true) {
     return new Promise((resolve, reject) => {
       const id = this.generateNextId();
       const payload = {
@@ -184,18 +196,18 @@ class Sprut {
       const requestTimeout = timeout || this.defaultTimeout;
 
       if (this.wsManager.isOpen()) {
-        this.wsManager.send(JSON.stringify(payload))
-          .then(() => {
-            this.queue.add(id, (response) => {
-              if (response.error && response.error.code === -666003) {
-                // Token is not valid, attempt retry with fresh token
-                this.retryCallWithFreshToken(json, resolve, reject);
-              } else {
-                resolve(response);
-              }
-            }, requestTimeout);
-          })
-          .catch(reject);
+        this.queue.add(id, (response) => {
+          if (response.error && response.error.code === -666003 && retryAuth && !json.account) {
+            // Token is not valid, attempt one retry with a fresh token.
+            this.retryCallWithFreshToken(json, resolve, reject);
+          } else {
+            resolve(response);
+          }
+        }, requestTimeout);
+        this.wsManager.send(JSON.stringify(payload)).catch(error => {
+          this.queue.remove(id);
+          reject(error);
+        });
       } else {
         this.log.error("WebSocket is not open. Cannot send message.");
         reject(new Error("WebSocket is not open"));
@@ -210,7 +222,7 @@ class Sprut {
         throw new Error("Authentication failed.");
       }
       // Retry the original call with the new token
-      const retryResponse = await this.call(json);
+      const retryResponse = await this.call(json, null, false);
       resolve(retryResponse);
     } catch (error) {
       reject(error);
@@ -221,23 +233,35 @@ class Sprut {
     return this.idCounter++;
   }
 
-  async close() {
-    // Clear all pending requests in the queue
-    if (this.queue && this.queue.clearAll) {
-      this.queue.clearAll();
+  close() {
+    if (!this.closePromise) {
+      this.closing = true;
+      // Assign before emitting closed, so reentrant callers share the same promise.
+      this.closePromise = Promise.resolve().then(() => this.performClose());
     }
-    
-    // Cleanup all active log subscriptions before closing
-    if (this.logManager) {
+    return this.closePromise;
+  }
+
+  async performClose() {
+    this.authManager.cancelAuthentication();
+    this.emit("closed");
+    this.queue.failAll();
+    try {
+      if (this.wsManager.isOpen()) {
+        const subscriptions = this.logManager.getActiveSubscriptions();
+        await Promise.all(subscriptions.map(({ uuid }) =>
+          // Shutdown must never initiate a new authentication flow.
+          this.call({ log: { unsubscribe: { uuid } } }, this.defaultTimeout, false).catch(() => {})));
+      }
+    } finally {
       try {
-        await this.logManager.unsubscribeAllLogs();
-        this.log.debug("All log subscriptions cleaned up during shutdown");
-      } catch (error) {
-        this.log.error("Error cleaning up log subscriptions during shutdown:", error);
+        await this.wsManager.close();
+      } finally {
+        this.queue.failAll();
+        this.logManager.cleanup();
+        this.authManager.clearToken();
       }
     }
-    
-    return await this.wsManager.close();
   }
 
   // Delegate methods to entity managers
